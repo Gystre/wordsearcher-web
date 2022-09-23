@@ -5,6 +5,22 @@ const config: ThemeConfig = {
     useSystemColorMode: true,
 };
 
-const theme = extendTheme({ config });
+const theme = extendTheme({
+    config,
+    colors: {
+        brand: {
+            100: "#FF9A00",
+        },
+    },
+    components: {
+        Button: {
+            variants: {
+                primary: {
+                    bg: "brand.100",
+                },
+            },
+        },
+    },
+});
 
 export default theme;
