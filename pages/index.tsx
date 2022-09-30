@@ -68,8 +68,8 @@ const Home: NextPage = () => {
                         height="30px"
                         mr={2}
                     />
-                    <Text>
-                        Drag an image here or{" "}
+                    <div>
+                        Drag an image{" "}
                         <Box
                             display="inline"
                             textDecoration="underline"
@@ -79,7 +79,7 @@ const Home: NextPage = () => {
                         >
                             upload a file
                         </Box>
-                    </Text>
+                    </div>
                 </Flex>
                 <Text>OR</Text>
                 <Flex>

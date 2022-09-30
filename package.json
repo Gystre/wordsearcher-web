@@ -10,10 +10,10 @@
         "gen-env": "npx gen-env-types .env.local -o env.d.ts"
     },
     "dependencies": {
+        "@azure/functions": "^3.2.0",
         "@chakra-ui/react": "^2.3.4",
         "@emotion/react": "^11.10.4",
         "@emotion/styled": "^11.10.4",
-        "@supabase/supabase-js": "^1.35.7",
         "formik": "^2.2.9",
         "framer-motion": "^7.3.6",
         "next": "12.3.1",
