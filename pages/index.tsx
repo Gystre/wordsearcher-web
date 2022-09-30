@@ -18,13 +18,12 @@ import { BsFillImageFill } from "react-icons/bs";
 import { ExampleBox } from "../components/ExampleBox";
 import { Layout } from "../components/Layout";
 import theme from "../theme";
-import { uploadFile } from "../utils/uploadFile";
 
 const Home: NextPage = () => {
     const [isMobile] = useMediaQuery("(max-width: 768px)");
     const { colorMode } = useColorMode();
 
-    const [progress, setProgress] = useState(0);
+    const [loading, setLoading] = useState(false);
 
     const formik = useFormik({
         initialValues: {
@@ -32,11 +31,18 @@ const Home: NextPage = () => {
             url: "",
         },
         onSubmit: async (values, actions) => {
-            console.log(values);
-            if (!values.file) return;
-
-            const url = await uploadFile(values.file, setProgress);
-            console.log(url);
+            // const url = await uploadFile(values.file, setProgress);
+            // console.log(url);
+            if (values.file) {
+            } else if (values.url.length > 0) {
+                setLoading(true);
+                const response = await fetch(
+                    `https://wordsearcher.azurewebsites.net/api/identifysearch?url=${values.url}`
+                );
+                const data = await response.json();
+                setLoading(false);
+                console.log(data);
+            }
 
             setTimeout(() => {
                 actions.setSubmitting(false);
@@ -52,7 +58,7 @@ const Home: NextPage = () => {
         onDrop,
         noClick: true,
         accept: { "image/*": [] },
-        maxSize: 300 * 1024, // 300 kb
+        maxSize: 8 * 1024 * 1024, // 8mb
     });
 
     var display: any = null;
@@ -89,7 +95,7 @@ const Home: NextPage = () => {
                         onChange={formik.handleChange}
                         name="url"
                     />
-                    <Button variant="primary" type="submit">
+                    <Button variant="primary" type="submit" isLoading={loading}>
                         Upload
                     </Button>
                 </Flex>

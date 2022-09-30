@@ -11,10 +11,13 @@
   },
   "dependencies": {
     "@tensorflow/tfjs-node": "^3.20.0",
-    "canvas": "^2.10.1"
+    "backblaze-b2": "^1.7.0",
+    "canvas": "^2.10.1",
+    "yup": "^0.32.11"
   },
   "devDependencies": {
     "@azure/functions": "^3.0.0",
+    "@types/backblaze-b2": "^1.5.1",
     "@types/node": "16.x",
     "typescript": "^4.0.0"
   }
