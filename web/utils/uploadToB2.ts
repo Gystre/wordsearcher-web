@@ -1,30 +1,45 @@
 import { enc, SHA1 } from "crypto-js";
+import { compressImage } from "./compressImage";
+import { noExtension } from "./noExtension";
 
-export const uploadToB2 = async (
-    file: File,
-    fileName: string,
+/*
+Possible to avoid crypto-js by using smaller library?
+Lower priority rn since crypto-js is only 50kb
+*/
 
-    // these 2 come from the the server
-    url: string,
-    authorizationToken: string
-) => {
-    return new Promise(function (resolve, reject) {
+export const uploadToB2 = async (file: File) => {
+    if (!/image/i.test(file.type)) {
+        throw new Error("File is not an image");
+    }
+
+    const compFile = await compressImage(file);
+    const savedBytes = file.size - compFile.size;
+
+    if (savedBytes > 0) {
+        console.log("compressed image, saved:", savedBytes / 1000000, "mb");
+        file = compFile;
+    }
+
+    const response = await fetch(
+        `https://wordsearcher.azurewebsites.net/api/signB2?fileName=${noExtension(
+            file.name
+        )}&fileType=${file.type}`
+    );
+
+    const data = await response.json();
+    const { uploadUrl, authorizationToken, fileName } = data;
+
+    var ret: any = await new Promise(function (resolve, reject) {
         const reader = new FileReader();
         reader.onload = function () {
-            // create sha1 hash for b2
-            // TODO: find a built in solution so i don't have to rely on crypto-js (external library) for this
-            // https://www.npmjs.com/package/sha1
-            // crypto.createHash from node library exists but don't know how to use with files from input
             const hash = SHA1(enc.Latin1.parse(reader.result as string));
             const xhr = new XMLHttpRequest();
 
             xhr.addEventListener("load", function () {
-                // console.info(`XHR response:`, this.response);
-
                 resolve(xhr.response);
             });
 
-            xhr.open("POST", url);
+            xhr.open("POST", uploadUrl);
 
             xhr.setRequestHeader("Content-Type", file.type);
             xhr.setRequestHeader("Authorization", authorizationToken);
@@ -38,4 +53,10 @@ export const uploadToB2 = async (
         };
         reader.readAsBinaryString(file);
     });
+    ret = JSON.parse(ret);
+    if (ret.status === 400) {
+        throw new Error(ret.message);
+    }
+
+    return `https://${process.env.NEXT_PUBLIC_B2_BUCKET}.${process.env.NEXT_PUBLIC_B2_ENDPOINT}/${fileName}`;
 };

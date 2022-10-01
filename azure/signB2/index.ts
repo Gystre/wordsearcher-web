@@ -32,6 +32,17 @@ const httpTrigger: AzureFunction = async function (
     const fileName = req.query.fileName || (req.body && req.body.fileName);
     const fileType = req.query.fileType || (req.body && req.body.fileType);
 
+    if (
+        !process.env.B2_KEY_ID ||
+        !process.env.B2_APPLICATION_KEY ||
+        !process.env.B2_BUCKET_ID
+    ) {
+        context.res = {
+            status: 500,
+            body: "Missing B2 credentials",
+        };
+    }
+
     try {
         await createS3Schema.validate({ fileName, fileType });
     } catch (e: any) {

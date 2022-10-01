@@ -18,6 +18,13 @@ import { BsFillImageFill } from "react-icons/bs";
 import { ExampleBox } from "../components/ExampleBox";
 import { Layout } from "../components/Layout";
 import theme from "../theme";
+import { uploadToB2 } from "../utils/uploadToB2";
+
+enum ErrorCode {
+    invalidUrl,
+    modelNotLoaded,
+    wordsearchNoFound,
+}
 
 const Home: NextPage = () => {
     const [isMobile] = useMediaQuery("(max-width: 768px)");
@@ -31,28 +38,43 @@ const Home: NextPage = () => {
             url: "",
         },
         onSubmit: async (values, actions) => {
-            // const url = await uploadFile(values.file, setProgress);
-            // console.log(url);
+            setLoading(true);
+            var url = "";
             if (values.file) {
+                url = await uploadToB2(values.file);
             } else if (values.url.length > 0) {
-                setLoading(true);
-                const response = await fetch(
-                    `https://wordsearcher.azurewebsites.net/api/identifysearch?url=${values.url}`
-                );
-                const data = await response.json();
-                setLoading(false);
-                console.log(data);
+                url = values.url;
             }
 
-            setTimeout(() => {
-                actions.setSubmitting(false);
-            }, 1000);
+            if (url.length > 0) {
+                const response = await fetch(
+                    `https://wordsearcher.azurewebsites.net/api/identifysearch?url=${url}`
+                );
+                const data = await response.json();
+                if (data.error) {
+                    switch (data.error) {
+                        case ErrorCode.invalidUrl:
+                            console.log("Invalid URL");
+                            break;
+                        case ErrorCode.modelNotLoaded:
+                            console.log("Model not loaded");
+                            break;
+                        case ErrorCode.wordsearchNoFound:
+                            console.log("Wordsearch not found");
+                            break;
+                    }
+                }
+                console.log(url);
+                console.log(data);
+            }
+            setLoading(false);
         },
     });
 
     const dropzoneRef = createRef<HTMLInputElement>();
     const onDrop = useCallback((acceptedFiles: File[]) => {
         formik.setFieldValue("file", acceptedFiles[0]);
+        formik.submitForm();
     }, []);
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
