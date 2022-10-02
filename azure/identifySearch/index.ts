@@ -68,7 +68,6 @@ const httpTrigger: AzureFunction = async function (
     // check if models are loaded before downloading anything
     if (loading) {
         context.res = {
-            status: 500,
             body: { error: ErrorCode.modelNotLoaded },
         };
         return;
@@ -82,7 +81,6 @@ const httpTrigger: AzureFunction = async function (
         });
     } catch (e) {
         context.res = {
-            status: 400,
             body: { error: ErrorCode.invalidUrl },
         };
         return;
@@ -115,7 +113,6 @@ const httpTrigger: AzureFunction = async function (
 
     if (loading || !identifierModel || !gridModel) {
         context.res = {
-            status: 500,
             body: { error: ErrorCode.modelNotLoaded },
         };
         return;
@@ -143,7 +140,6 @@ const httpTrigger: AzureFunction = async function (
 
         if (idValidDetectionsData === 0) {
             context.res = {
-                status: 500,
                 body: { error: ErrorCode.wordsearchNoFound },
             };
             return;
@@ -157,7 +153,6 @@ const httpTrigger: AzureFunction = async function (
 
         if (!gridModel) {
             context.res = {
-                status: 500,
                 body: { error: ErrorCode.modelNotLoaded },
             };
             return;

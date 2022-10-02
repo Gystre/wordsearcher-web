@@ -6,11 +6,15 @@ import {
     Heading,
     Icon,
     Input,
+    Spinner,
     Text,
     useColorMode,
     useMediaQuery,
+    useToast,
+    UseToastOptions,
 } from "@chakra-ui/react";
 import { useFormik } from "formik";
+import { motion } from "framer-motion";
 import type { NextPage } from "next";
 import { createRef, useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
@@ -18,6 +22,7 @@ import { BsFillImageFill } from "react-icons/bs";
 import { ExampleBox } from "../components/ExampleBox";
 import { Layout } from "../components/Layout";
 import theme from "../theme";
+import { errorAnim } from "../utils/errorAnim";
 import { uploadToB2 } from "../utils/uploadToB2";
 
 enum ErrorCode {
@@ -26,45 +31,98 @@ enum ErrorCode {
     wordsearchNoFound,
 }
 
+const errorToast = (err: string): UseToastOptions => {
+    return {
+        title: "Error",
+        description: err,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+    };
+};
+
 const Home: NextPage = () => {
     const [isMobile] = useMediaQuery("(max-width: 768px)");
     const { colorMode } = useColorMode();
+    const toast = useToast();
 
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(false);
+    const [status, setStatus] = useState("");
 
     const formik = useFormik({
         initialValues: {
             file: null as File | null,
             url: "",
         },
-        onSubmit: async (values, actions) => {
+        onSubmit: async (values) => {
+            setStatus("");
+            setError(false);
             setLoading(true);
             var url = "";
             if (values.file) {
-                url = await uploadToB2(values.file);
+                try {
+                    url = await uploadToB2(values.file);
+                } catch (e: any) {
+                    toast(errorToast(e.message));
+                    setError(true);
+                    setLoading(false);
+                    return;
+                }
+                setStatus("Uploaded file...");
             } else if (values.url.length > 0) {
                 url = values.url;
             }
 
             if (url.length > 0) {
+                console.log("url:", url);
+                setStatus("Identifying wordsearch...");
+
                 const response = await fetch(
                     `https://wordsearcher.azurewebsites.net/api/identifysearch?url=${url}`
                 );
-                const data = await response.json();
-                if (data.error) {
-                    switch (data.error) {
-                        case ErrorCode.invalidUrl:
-                            console.log("Invalid URL");
-                            break;
-                        case ErrorCode.modelNotLoaded:
-                            console.log("Model not loaded");
-                            break;
-                        case ErrorCode.wordsearchNoFound:
-                            console.log("Wordsearch not found");
-                            break;
+                var data = await response.json();
+
+                if (typeof data.error === "number") {
+                    try {
+                        switch (data.error) {
+                            case ErrorCode.invalidUrl:
+                                throw new Error("Invalid image link.");
+                            case ErrorCode.modelNotLoaded:
+                                // try again 3 seperate times each 3 seconds apart
+                                for (let i = 0; i < 3; i++) {
+                                    console.log(
+                                        "models aren't loaded, attempt: " +
+                                            (i + 1)
+                                    );
+                                    await new Promise((r) =>
+                                        setTimeout(r, 3000)
+                                    );
+                                    const newResponse = await fetch(
+                                        `https://wordsearcher.azurewebsites.net/api/identifysearch?url=${url}`
+                                    );
+                                    const newData = await newResponse.json();
+                                    if (!newData.error) {
+                                        data = newData;
+                                        break;
+                                    }
+                                }
+                                throw new Error(
+                                    "Model not loaded, azure function is probably asleep. Please try again in ~5 seconds."
+                                );
+                            case ErrorCode.wordsearchNoFound:
+                                throw new Error(
+                                    "No wordsearch found in image. Please try using a different picture or use better lighting."
+                                );
+                        }
+                    } catch (e: any) {
+                        toast(errorToast(e.message));
+                        setError(true);
+                        setLoading(false);
+                        return;
                     }
                 }
-                console.log(url);
                 console.log(data);
             }
             setLoading(false);
@@ -80,49 +138,59 @@ const Home: NextPage = () => {
         onDrop,
         noClick: true,
         accept: { "image/*": [] },
-        maxSize: 8 * 1024 * 1024, // 8mb
+        maxSize: 10 * 1024 * 1024, // 10mb
     });
 
     var display: any = null;
     if (isDragActive) {
         display = <Text>Drop an image</Text>;
     } else {
-        display = (
-            <>
-                <Flex align="center">
-                    <Icon
-                        as={BsFillImageFill}
-                        width="30px"
-                        height="30px"
-                        mr={2}
-                    />
-                    <div>
-                        Drag an image{" "}
-                        <Box
-                            display="inline"
-                            textDecoration="underline"
-                            cursor="pointer"
-                            color="blue.300"
-                            onClick={() => dropzoneRef.current?.click()}
-                        >
-                            upload a file
-                        </Box>
-                    </div>
+        if (!loading) {
+            display = (
+                <>
+                    <Flex align="center">
+                        <Icon
+                            as={BsFillImageFill}
+                            width="30px"
+                            height="30px"
+                            mr={2}
+                        />
+                        <div>
+                            Drag an image{" "}
+                            <Box
+                                display="inline"
+                                textDecoration="underline"
+                                cursor="pointer"
+                                color="blue.300"
+                                onClick={() => dropzoneRef.current?.click()}
+                            >
+                                upload a file
+                            </Box>
+                        </div>
+                    </Flex>
+                    <Text>OR</Text>
+                    <Flex>
+                        <Input
+                            mr={2}
+                            placeholder="URL"
+                            onChange={formik.handleChange}
+                            value={formik.values.url}
+                            name="url"
+                        />
+                        <Button variant="primary" type="submit">
+                            Upload
+                        </Button>
+                    </Flex>
+                </>
+            );
+        } else {
+            display = (
+                <Flex align="center" direction="column">
+                    <Spinner />
+                    <Text mt={2}>{status}</Text>
                 </Flex>
-                <Text>OR</Text>
-                <Flex>
-                    <Input
-                        mr={2}
-                        placeholder="URL"
-                        onChange={formik.handleChange}
-                        name="url"
-                    />
-                    <Button variant="primary" type="submit" isLoading={loading}>
-                        Upload
-                    </Button>
-                </Flex>
-            </>
-        );
+            );
+        }
     }
 
     return (
@@ -137,17 +205,19 @@ const Home: NextPage = () => {
                         <Flex
                             padding={isMobile ? 2 : 0}
                             border="dashed 2px"
-                            borderColor="gray.300"
+                            borderColor={error ? "red" : "gray.300"}
                             borderRadius={6}
                             backgroundColor={
                                 colorMode === "light" ? "gray.50" : "gray.700"
                             }
-                            width={isMobile ? "100%" : "500px"}
+                            minWidth={isMobile ? "60vw" : "500px"}
                             height="300px"
                             direction="column"
                             align="center"
                             justifyContent="space-evenly"
                             basis="100%"
+                            as={motion.div}
+                            animation={error ? errorAnim : ""}
                         >
                             <input {...getInputProps()} ref={dropzoneRef} />
                             {display}
