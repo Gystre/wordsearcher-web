@@ -16,6 +16,7 @@ import {
 import { useFormik } from "formik";
 import { motion } from "framer-motion";
 import type { NextPage } from "next";
+import { useRouter } from "next/router";
 import { createRef, useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { BsFillImageFill } from "react-icons/bs";
@@ -28,7 +29,7 @@ import { uploadToB2 } from "../utils/uploadToB2";
 enum ErrorCode {
     invalidUrl,
     modelNotLoaded,
-    wordsearchNoFound,
+    wordsearchNotFound,
 }
 
 const errorToast = (err: string): UseToastOptions => {
@@ -46,10 +47,16 @@ const Home: NextPage = () => {
     const [isMobile] = useMediaQuery("(max-width: 768px)");
     const { colorMode } = useColorMode();
     const toast = useToast();
+    const router = useRouter();
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
     const [status, setStatus] = useState("");
+
+    const setCrashed = () => {
+        setLoading(false);
+        setError(true);
+    };
 
     const formik = useFormik({
         initialValues: {
@@ -57,7 +64,7 @@ const Home: NextPage = () => {
             url: "",
         },
         onSubmit: async (values) => {
-            setStatus("");
+            setStatus("Uploading...");
             setError(false);
             setLoading(true);
             var url = "";
@@ -66,8 +73,7 @@ const Home: NextPage = () => {
                     url = await uploadToB2(values.file);
                 } catch (e: any) {
                     toast(errorToast(e.message));
-                    setError(true);
-                    setLoading(false);
+                    setCrashed();
                     return;
                 }
                 setStatus("Uploaded file...");
@@ -79,9 +85,20 @@ const Home: NextPage = () => {
                 console.log("url:", url);
                 setStatus("Identifying wordsearch...");
 
-                const response = await fetch(
-                    `https://wordsearcher.azurewebsites.net/api/identifysearch?url=${url}`
-                );
+                var response = null;
+                try {
+                    response = await fetch(
+                        `https://wordsearcher.azurewebsites.net/api/identifysearch?url=${url}`
+                    );
+                } catch (e: any) {
+                    toast(
+                        errorToast(
+                            "Failed to connect to server. It might be down right now :("
+                        )
+                    );
+                    setCrashed();
+                    return;
+                }
                 var data = await response.json();
 
                 if (typeof data.error === "number") {
@@ -90,40 +107,86 @@ const Home: NextPage = () => {
                             case ErrorCode.invalidUrl:
                                 throw new Error("Invalid image link.");
                             case ErrorCode.modelNotLoaded:
-                                // try again 3 seperate times each 3 seconds apart
-                                for (let i = 0; i < 3; i++) {
-                                    console.log(
-                                        "models aren't loaded, attempt: " +
-                                            (i + 1)
+                                // try again 3 times each 3 seconds apart
+                                var got = false;
+                                for (let i = 1; i <= 3; i++) {
+                                    setStatus(
+                                        "Models aren't loaded, attempt: " +
+                                            i +
+                                            "..."
                                     );
                                     await new Promise((r) =>
                                         setTimeout(r, 3000)
                                     );
-                                    const newResponse = await fetch(
-                                        `https://wordsearcher.azurewebsites.net/api/identifysearch?url=${url}`
-                                    );
-                                    const newData = await newResponse.json();
-                                    if (!newData.error) {
-                                        data = newData;
-                                        break;
-                                    }
+                                    try {
+                                        const newResponse = await fetch(
+                                            `https://wordsearcher.azurewebsites.net/api/identifysearch?url=${url}`
+                                        );
+                                        const newData =
+                                            await newResponse.json();
+                                        if (!newData.error) {
+                                            data = newData;
+                                            got = true;
+                                            break;
+                                        }
+                                    } catch (e: any) {}
                                 }
-                                throw new Error(
-                                    "Model not loaded, azure function is probably asleep. Please try again in ~5 seconds."
-                                );
-                            case ErrorCode.wordsearchNoFound:
+                                if (!got)
+                                    throw new Error(
+                                        "Model not loaded, azure function is probably asleep. Please try again in ~5 seconds."
+                                    );
+                                break;
+                            case ErrorCode.wordsearchNotFound:
                                 throw new Error(
                                     "No wordsearch found in image. Please try using a different picture or use better lighting."
                                 );
                         }
                     } catch (e: any) {
                         toast(errorToast(e.message));
-                        setError(true);
-                        setLoading(false);
+                        setCrashed();
                         return;
                     }
                 }
                 console.log(data);
+
+                const finalData = {
+                    url,
+                    ...data,
+                };
+
+                // insert into db
+                var dbResponse = null;
+                try {
+                    dbResponse = await fetch(
+                        "https://wordsearcher.azurewebsites.net/api/insertSolve",
+                        {
+                            method: "POST",
+                            body: JSON.stringify(finalData),
+                        }
+                    );
+                } catch (e: any) {
+                    console.log(e);
+                    toast(
+                        errorToast(
+                            "Failed to insert into the database. The database might be down :("
+                        )
+                    );
+                    setCrashed();
+                    return;
+                }
+                var dbData = await dbResponse.json();
+
+                // push to solves/uid
+                console.log(dbData);
+
+                if (dbData.error) {
+                    console.log(dbData.error);
+                    toast(errorToast(dbData.error));
+                    setCrashed();
+                    return;
+                }
+
+                router.push(`/solve/${dbData.uid}`);
             }
             setLoading(false);
         },

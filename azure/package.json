@@ -10,13 +10,13 @@
     "test": "echo \"No tests yet...\""
   },
   "dependencies": {
+    "@azure/cosmos": "^3.17.1",
     "@tensorflow/tfjs-node": "^3.20.0",
     "backblaze-b2": "^1.7.0",
     "canvas": "^2.10.1",
     "yup": "^0.32.11"
   },
   "devDependencies": {
-    "@azure/cosmos": "^3.17.1",
     "@azure/functions": "^3.0.0",
     "@types/backblaze-b2": "^1.5.1",
     "@types/node": "16.x",

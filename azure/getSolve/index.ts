@@ -77,7 +77,7 @@ const httpTrigger: AzureFunction = async function (
     };
 
     context.res = {
-        body: ret,
+        body: JSON.stringify(ret),
     };
 };
 

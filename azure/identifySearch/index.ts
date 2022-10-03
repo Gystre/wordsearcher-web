@@ -184,18 +184,18 @@ const httpTrigger: AzureFunction = async function (
             // could probs perform the reshape before dataSync() for better performance
             // no idea tho lololol
             const gValidDetectionsData = gValidDetections.dataSync()[0];
-            const gBoxesData = gBoxes
-                .dataSync()
-                .slice(0, 4 * gValidDetectionsData);
-            const gScoresData = gScores
-                .dataSync()
-                .slice(0, gValidDetectionsData);
-            const gClassesData = gClasses
-                .dataSync()
-                .slice(0, gValidDetectionsData);
+            const gBoxesData = Array.from(
+                gBoxes.dataSync().slice(0, 4 * gValidDetectionsData)
+            );
+            const gScoresData = Array.from(
+                gScores.dataSync().slice(0, gValidDetectionsData)
+            );
+            const gClassesData = Array.from(
+                gClasses.dataSync().slice(0, gValidDetectionsData)
+            );
 
             context.res = {
-                body: {
+                body: JSON.stringify({
                     croppedInput: convertFromYolo(
                         firstBox[0] - xPadding,
                         firstBox[1] - yPadding,
@@ -208,7 +208,7 @@ const httpTrigger: AzureFunction = async function (
                     gScoresData,
                     gClassesData,
                     gValidDetectionsData,
-                },
+                }),
             };
 
             dispose(res);

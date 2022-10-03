@@ -8,13 +8,23 @@ enum ErrorCode {
     containerError,
 }
 
+const maxLen = 1000;
 const validateQuery = object().shape({
-    url: string().url().required(),
-    croppedInput: array().required(),
-    gBoxesData: array().required(),
-    gScoresData: array().required(),
-    gClassesData: array().required(),
-    gValidDetectionsData: number().positive().integer().required(),
+    url: string().url().min(1).max(maxLen).required(),
+    croppedInput: object()
+        .shape({
+            x1: number().required(),
+            y1: number().required(),
+            x2: number().required(),
+            y2: number().required(),
+        })
+        .required(),
+    gBoxesData: array()
+        .max(maxLen * 4)
+        .required(),
+    gScoresData: array().max(maxLen).required(),
+    gClassesData: array().max(maxLen).required(),
+    gValidDetectionsData: number().positive().integer().max(maxLen).required(),
 });
 
 const httpTrigger: AzureFunction = async function (
@@ -27,13 +37,6 @@ const httpTrigger: AzureFunction = async function (
         };
         return;
     }
-
-    const url = req.body.url;
-    const croppedInput = req.body.croppedInput;
-    const gBoxesData = req.body.gBoxesData;
-    const gScoresData = req.body.gScoresData;
-    const gClassesData = req.body.gClassesData;
-    const gValidDetectionsData = req.body.gValidDetectionsData;
 
     try {
         validateQuery.validateSync(req.body);
@@ -82,6 +85,12 @@ const httpTrigger: AzureFunction = async function (
     // generate random 8 digit id
     const uid = Math.floor(10000000 + Math.random() * 90000000);
 
+    const url = req.body.url;
+    const croppedInput = req.body.croppedInput;
+    const gBoxesData = req.body.gBoxesData;
+    const gScoresData = req.body.gScoresData;
+    const gClassesData = req.body.gClassesData;
+    const gValidDetectionsData = req.body.gValidDetectionsData;
     const { resource } = await container.items.create({
         uid,
         url,
@@ -95,8 +104,7 @@ const httpTrigger: AzureFunction = async function (
     });
 
     context.res = {
-        body: resource,
-        status: 200,
+        body: JSON.stringify(resource),
     };
 };
 
