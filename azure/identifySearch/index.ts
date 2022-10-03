@@ -15,7 +15,7 @@ import { createCanvas, loadImage } from "canvas";
 enum ErrorCode {
     invalidUrl,
     modelNotLoaded,
-    wordsearchNoFound,
+    wordsearchNotFound,
 }
 
 var loading = true;
@@ -140,7 +140,7 @@ const httpTrigger: AzureFunction = async function (
 
         if (idValidDetectionsData === 0) {
             context.res = {
-                body: { error: ErrorCode.wordsearchNoFound },
+                body: { error: ErrorCode.wordsearchNotFound },
             };
             return;
         }
