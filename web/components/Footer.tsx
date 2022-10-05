@@ -21,44 +21,48 @@ export const Footer: React.FC<FooterProps> = ({}) => {
     const iconColor = colorMode === "light" ? "black" : "white";
 
     return (
-        <Flex width="100%" position="fixed" bottom={0} p={4}>
-            <Flex
-                align="center"
-                justifyContent="space-between"
-                // direction={isMobile ? "column" : "row"}
-                m="auto"
-                maxW={800}
-            >
-                <Image src="/logo.png" alt="logo" width={25} height={25} />
+        <Flex
+            align="center"
+            justifyContent="space-between"
+            // direction={isMobile ? "column" : "row"}
+            m="auto"
+            py={8}
+            maxW={800}
+        >
+            <Image src="/logo.png" alt="logo" width={25} height={25} />
 
-                <Heading size="sm" userSelect="none">
-                    Wordsearcher
-                </Heading>
+            <Heading size="sm" userSelect="none">
+                Wordsearcher
+            </Heading>
 
-                <Box ml={2} />
-                {!isMobile ? (
-                    <>
-                        <Circle radius={8} color={iconColor} />
-                        <Box ml={2} />
-                    </>
-                ) : null}
+            <Box ml={2} />
+            {!isMobile ? (
+                <>
+                    <Circle radius={8} color={iconColor} />
+                    <Box ml={2} />
+                </>
+            ) : null}
 
-                <Text fontSize={isMobile ? "sm" : "md"}>
-                    © 2022 Kyle Yu Inc.
-                </Text>
+            <Text fontSize={isMobile ? "sm" : "md"}>© 2022 Kyle Yu Inc.</Text>
 
-                <Box ml={2} />
-                {!isMobile ? (
-                    <>
-                        <Circle radius={8} color={iconColor} />
-                        <Box ml={2} />
-                    </>
-                ) : null}
+            <Box ml={2} />
+            {!isMobile ? (
+                <>
+                    <Circle radius={8} color={iconColor} />
+                    <Box ml={2} />
+                </>
+            ) : null}
 
+            <a href="https://github.com/gystre" target="_blank">
                 <GithubIcon size={25} color={iconColor} />
-                <Box ml={2} />
+            </a>
+            <Box ml={2} />
+            <a
+                href="https://www.linkedin.com/in/kyle-yu-3139a5140/"
+                target="_blank"
+            >
                 <LinkedinIcon size={25} color={iconColor} />
-            </Flex>
+            </a>
         </Flex>
     );
 };

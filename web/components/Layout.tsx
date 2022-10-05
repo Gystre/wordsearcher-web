@@ -1,5 +1,4 @@
-import { Box } from "@chakra-ui/layout";
-import { useMediaQuery } from "@chakra-ui/react";
+import { Box, Flex, Grid, useMediaQuery } from "@chakra-ui/react";
 import Head from "next/head";
 import { Footer } from "./Footer";
 import { Navbar } from "./Navbar";
@@ -26,11 +25,15 @@ export const Layout: React.FC<Props> = ({ children }) => {
                 />
                 <link rel="icon" href="/favicon.ico" />
             </Head>
-            <Navbar />
-            <Box mt={8} mx="auto" maxW={isMobile ? "400px" : ""} w="100%">
-                {children}
-            </Box>
-            <Footer />
+            <Grid templateRows="auto 1fr auto" height="100vh">
+                <Navbar />
+                <Box mt={8} mx="auto" maxW={isMobile ? "400px" : ""} w="100%">
+                    <Flex direction="column" align="center" textAlign="center">
+                        {children}
+                    </Flex>
+                </Box>
+                <Footer />
+            </Grid>
         </>
     );
 };

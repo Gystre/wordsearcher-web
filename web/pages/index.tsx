@@ -259,44 +259,40 @@ const Home: NextPage = () => {
     return (
         <Layout>
             <ColorModeScript initialColorMode={theme.config.initialColorMode} />
-            <Flex direction="column" align="center" textAlign="center">
-                <Heading mb={4}>
-                    Solve any wordsearch with just a picture!
-                </Heading>
-                <form onSubmit={formik.handleSubmit}>
-                    <div {...getRootProps()}>
-                        <Flex
-                            padding={isMobile ? 2 : 0}
-                            border="dashed 2px"
-                            borderColor={error ? "red" : "gray.300"}
-                            borderRadius={6}
-                            backgroundColor={
-                                colorMode === "light" ? "gray.50" : "gray.700"
-                            }
-                            minWidth={isMobile ? "60vw" : "500px"}
-                            height="300px"
-                            direction="column"
-                            align="center"
-                            justifyContent="space-evenly"
-                            basis="100%"
-                            as={motion.div}
-                            animation={error ? errorAnim : ""}
-                        >
-                            <input {...getInputProps()} ref={dropzoneRef} />
-                            {display}
-                        </Flex>
-                    </div>
-                </form>
-                <Box mb={8} />
+            <Heading mb={4}>Solve any wordsearch with just a picture!</Heading>
+            <form onSubmit={formik.handleSubmit}>
+                <div {...getRootProps()}>
+                    <Flex
+                        padding={isMobile ? 2 : 0}
+                        border="dashed 2px"
+                        borderColor={error ? "red" : "gray.300"}
+                        borderRadius={6}
+                        backgroundColor={
+                            colorMode === "light" ? "gray.50" : "gray.700"
+                        }
+                        minWidth={isMobile ? "60vw" : "500px"}
+                        height="300px"
+                        direction="column"
+                        align="center"
+                        justifyContent="space-evenly"
+                        basis="100%"
+                        as={motion.div}
+                        animation={error ? errorAnim : ""}
+                    >
+                        <input {...getInputProps()} ref={dropzoneRef} />
+                        {display}
+                    </Flex>
+                </div>
+            </form>
+            <Box mb={8} />
 
-                <Heading size="lg" mt={2} mb={4}>
-                    Or try one of these...
-                </Heading>
-                <Flex direction={isMobile ? "column" : "row"}>
-                    <ExampleBox imageUrl="/ex1.jpg" />
-                    <ExampleBox imageUrl="/ex1.jpg" />
-                    <ExampleBox imageUrl="/ex1.jpg" />
-                </Flex>
+            <Heading size="lg" mt={2} mb={4}>
+                Or try one of these...
+            </Heading>
+            <Flex direction={isMobile ? "column" : "row"}>
+                <ExampleBox imageUrl="/ex1.jpg" />
+                <ExampleBox imageUrl="/ex1.jpg" />
+                <ExampleBox imageUrl="/ex1.jpg" />
             </Flex>
         </Layout>
     );

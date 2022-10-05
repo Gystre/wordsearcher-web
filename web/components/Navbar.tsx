@@ -46,12 +46,18 @@ export const Navbar: React.FC<Props> = () => {
                     </Flex>
                 </Link>
 
+                {/* attach button click to google analytics later? */}
                 <Flex align="center">
-                    <IconButton
-                        icon={<BsFillQuestionCircleFill />}
-                        aria-label="info"
-                        mr={2}
-                    />
+                    <a
+                        href="https://github.com/gystre/wordsearcher"
+                        target="_blank"
+                    >
+                        <IconButton
+                            icon={<BsFillQuestionCircleFill title="About" />}
+                            aria-label="About"
+                            mr={2}
+                        />
+                    </a>
                     <Button
                         aria-label="Toggle Color Mode"
                         onClick={toggleColorMode}
@@ -59,9 +65,9 @@ export const Navbar: React.FC<Props> = () => {
                         w="fit-content"
                     >
                         {colorMode === "light" ? (
-                            <BsMoonStarsFill />
+                            <BsMoonStarsFill title="Switch to dark mode" />
                         ) : (
-                            <BsSun />
+                            <BsSun title="Switch to light mode" />
                         )}
                     </Button>
                 </Flex>
