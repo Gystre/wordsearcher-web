@@ -1,5 +1,3 @@
-import { GetStaticProps, InferGetStaticPropsType } from "next";
-
 import {
     Box,
     Button,
@@ -13,14 +11,17 @@ import {
     ModalContent,
     ModalHeader,
     ModalOverlay,
+    Spinner,
     Text,
     useDisclosure,
     useMediaQuery,
     useToast,
 } from "@chakra-ui/react";
+import { GetStaticProps, InferGetStaticPropsType } from "next";
 import { useRouter } from "next/router";
 import { useRef, useState } from "react";
 import { BsArrowLeft, BsShareFill, BsTwitter, BsXLg } from "react-icons/bs";
+import { MdOutlineContentCopy } from "react-icons/md";
 import { Layout } from "../../components/Layout";
 import theme from "../../theme";
 import { cleanString } from "../../utils/cleanString";
@@ -43,17 +44,17 @@ type Data = {
 };
 
 const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
+    uid,
     data,
 }: {
+    uid: number | undefined;
     data: Data | undefined;
 }) => {
     const router = useRouter();
-    console.log(data);
 
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [words, setWords] = useState<string[]>([]);
     const [found, setFound] = useState<Set<string>>(new Set<string>()); // solveWordSearch(): cleaned input words
-    // const [data, setData] = useState<Data | null>(null);
     const [wordError, setWordError] = useState<string | null>(null);
 
     const toast = useToast();
@@ -110,6 +111,7 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
         return (
             <Layout>
                 <div>Loading...</div>
+                <Spinner mt={2} size="xl" />
             </Layout>
         );
 
@@ -120,6 +122,8 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
             </Layout>
         );
     }
+
+    const url = process.env.NEXT_PUBLIC_URL + `/solve/${uid}`;
 
     return (
         <Layout>
@@ -147,20 +151,14 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
                         <ModalCloseButton />
                         <ModalBody>
                             <Flex align="center">
-                                {/* <Input
-                                    mr={2}
-                                    value={window.location.href}
-                                    readOnly
-                                />
+                                <Input mr={2} value={url} readOnly />
                                 <Button
                                     leftIcon={
                                         <MdOutlineContentCopy title="Copy link" />
                                     }
                                     variant="primary"
                                     onClick={() => {
-                                        navigator.clipboard.writeText(
-                                            window.location.href
-                                        );
+                                        navigator.clipboard.writeText(url);
                                         toast({
                                             title: "Copied to clipboard",
                                             position: "top",
@@ -170,17 +168,17 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
                                     }}
                                 >
                                     Copy
-                                </Button> */}
+                                </Button>
                             </Flex>
                             <Button
                                 mt={2}
                                 colorScheme="twitter"
                                 leftIcon={<BsTwitter title="Tweet this" />}
                                 onClick={() => {
-                                    // window.open(
-                                    //     `https://twitter.com/intent/tweet?url=${window.location.href}&text=I%20just%20solved%20a%20wordsearch%20on%20Wordsearcher!%20Check%20it%20out:&hashtags=Wordsearcher%2Cwordsearch`,
-                                    //     "_blank"
-                                    // );
+                                    window.open(
+                                        `https://twitter.com/intent/tweet?url=${url}&text=I%20just%20solved%20a%20wordsearch%20on%20Wordsearcher!%20Check%20it%20out:&hashtags=Wordsearcher%2Cwordsearch`,
+                                        "_blank"
+                                    );
                                 }}
                             >
                                 Tweet
@@ -311,6 +309,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     return {
         props: {
             data,
+            uid: params?.uid,
         },
     };
 };
