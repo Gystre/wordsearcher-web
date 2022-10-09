@@ -53,8 +53,6 @@ export class Box {
         return newBox;
     }
 
-    // FUTURE KYLE
-    // figure out why this fking broken
     private intersects(other: Box) {
         return (
             this.topLeft.x < other.bottomRight.x &&

@@ -1,12 +1,14 @@
 import { CosmosClient } from "@azure/cosmos";
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { array, number, object, string } from "yup";
+import { ErrorCode } from "../shared/ErrorCode";
 
-enum ErrorCode {
-    clientError,
-    databaseError,
-    containerError,
-}
+const client = new CosmosClient({
+    endpoint: process.env.COSMOS_ENDPOINT as string,
+    key: process.env.COSMOS_KEY as string,
+});
+const database = client.database(process.env.COSMOS_DATABASE as string);
+const container = database.container(process.env.COSMOS_CONTAINER as string);
 
 const maxLen = 1000;
 const validateQuery = object().shape({
@@ -19,12 +21,7 @@ const validateQuery = object().shape({
             y2: number().required(),
         })
         .required(),
-    gBoxesData: array()
-        .max(maxLen * 4)
-        .required(),
-    gScoresData: array().max(maxLen).required(),
-    gClassesData: array().max(maxLen).required(),
-    gValidDetectionsData: number().positive().integer().max(maxLen).required(),
+    grid: array().max(maxLen).required(),
 });
 
 const httpTrigger: AzureFunction = async function (
@@ -47,44 +44,21 @@ const httpTrigger: AzureFunction = async function (
         return;
     }
 
-    // make a call to cosmos db to insert a new entry
-    // triple try catch LMAO
-    var client = null;
-    try {
-        client = new CosmosClient({
-            endpoint: process.env.COSMOS_ENDPOINT as string,
-            key: process.env.COSMOS_KEY as string,
-        });
-    } catch (e) {
+    if (
+        !process.env.COSMOS_ENDPOINT ||
+        !process.env.COSMOS_KEY ||
+        !process.env.COSMOS_DATABASE ||
+        !process.env.COSMOS_CONTAINER
+    ) {
         context.res = {
-            body: { error: ErrorCode.clientError },
+            body: { error: ErrorCode.missingCreds },
         };
-        return;
     }
 
-    var database = null;
-    try {
-        database = client?.database(process.env.COSMOS_DATABASE as string);
-    } catch (e) {
-        context.res = {
-            body: { error: ErrorCode.databaseError },
-        };
-        return;
-    }
+    // generate random 8 length lowercase alphanumeric id
+    const uid = Math.random().toString(36).substring(2, 10);
 
-    var container = null;
-    try {
-        container = database?.container(process.env.COSMOS_CONTAINER as string);
-    } catch (e) {
-        context.res = {
-            body: { error: ErrorCode.containerError },
-        };
-        return;
-    }
-
-    // generate random 8 digit id
-    const uid = Math.floor(10000000 + Math.random() * 90000000);
-
+    // TODO: verify url is valid and is image
     const url = req.body.url;
     const croppedInput = req.body.croppedInput;
     const gBoxesData = req.body.gBoxesData;

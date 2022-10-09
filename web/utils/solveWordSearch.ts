@@ -28,15 +28,15 @@ const directions: Displacement[] = [
 ];
 
 export const solveWordSearch = (
-    debugCanvas: HTMLCanvasElement,
-    tempCanvas: HTMLCanvasElement,
+    canvas: HTMLCanvasElement, // canvas we're going to draw everything too
+    gridImage: HTMLCanvasElement, // clean cropped image for cleaning the drawing
     grid: Box[][],
     words: string[] // whatever is modified here will be updated in the state
 ): Set<string> => {
     // redraw the image so can easily add more words and stuff
-    const debugCtx = debugCanvas.getContext("2d");
-    if (!debugCtx) return new Set<string>();
-    debugCtx.drawImage(tempCanvas, 0, 0);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return new Set<string>();
+    ctx.drawImage(gridImage, 0, 0);
 
     const trie = new TrieNode();
     for (const w of words) {
@@ -92,17 +92,15 @@ export const solveWordSearch = (
         }
     }
 
-    const ctx = debugCanvas.getContext("2d");
-    if (!ctx) return new Set<string>();
-
+    // draw all the wordsssss
     const ret = new Set<string>();
     for (let i = 0; i < matches.length; i++) {
         const match = matches[i];
         ret.add(cleanString(match.word));
         const start = grid[match.start.rowIdx][match.start.colIdx];
         const end = grid[match.end.rowIdx][match.end.colIdx];
-        start.draw(ctx, "green", match.word);
-        start.drawLine(ctx, end, "green");
+        start.draw(ctx, "#FF9A00", match.word);
+        start.drawLine(ctx, end, "#FF9A00");
     }
 
     return ret;

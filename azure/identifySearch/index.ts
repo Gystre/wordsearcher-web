@@ -1,5 +1,5 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
-import { io, Rank, Tensor } from "@tensorflow/tfjs-core";
+import { io, Rank, Tensor, Tensor3D } from "@tensorflow/tfjs-core";
 import {
     browser,
     dispose,
@@ -9,14 +9,10 @@ import {
     ones,
     tidy,
 } from "@tensorflow/tfjs-node";
-import { createCanvas, loadImage } from "canvas";
-
-// make sure this stays the same on the client
-enum ErrorCode {
-    invalidUrl,
-    modelNotLoaded,
-    wordsearchNotFound,
-}
+import { createCanvas, ImageData, loadImage } from "canvas";
+import { ErrorCode } from "../shared/ErrorCode";
+import { createGridArray } from "./createGridArray";
+let fs = require("fs");
 
 var loading = true;
 var identifierModel: GraphModel<string | io.IOHandler> | null = null;
@@ -25,7 +21,7 @@ var gridModel: GraphModel<string | io.IOHandler> | null = null;
 const identifierPromise = loadGraphModel(
     `https://xaist2.github.io/wordsearcher-identifier_7-5-2022/model.json`,
     {
-        onProgress: (fractions) => {
+        onProgress: () => {
             loading = true;
         },
     }
@@ -34,12 +30,13 @@ const identifierPromise = loadGraphModel(
 const gridPromise = loadGraphModel(
     `https://xaist2.github.io/wordsearcher-grid_8-12-2022/model.json`,
     {
-        onProgress: (fractions) => {
+        onProgress: () => {
             loading = true;
         },
     }
 );
 
+// load the models and tesseract.js before the function can begin
 Promise.all([identifierPromise, gridPromise]).then(
     async ([identifier, grid]) => {
         // pass garbage input to "warm up" the model and make subsequent invocations faster
@@ -59,11 +56,11 @@ Promise.all([identifierPromise, gridPromise]).then(
     }
 );
 
-const httpTrigger: AzureFunction = async function (
+export const run: AzureFunction = async function (
     context: Context,
     req: HttpRequest
 ): Promise<void> {
-    const url = req.query.url || (req.body && req.body.url);
+    const url = req.query.url;
 
     // check if models are loaded before downloading anything
     if (loading) {
@@ -194,6 +191,40 @@ const httpTrigger: AzureFunction = async function (
                 gClasses.dataSync().slice(0, gValidDetectionsData)
             );
 
+            const gridImage = createCanvas(gridModelWidth, gridModelHeight);
+            const squeezed = croppedInput.squeeze();
+            const gridArray = await browser.toPixels(squeezed as Tensor3D);
+
+            const imageData = new ImageData(
+                gridArray,
+                gridImage.width,
+                gridImage.height
+            );
+            gridImage.getContext("2d")!.putImageData(imageData, 0, 0);
+            // drawBoxes(
+            //     gridImage,
+            //     gBoxesData,
+            //     gScoresData,
+            //     gClassesData,
+            //     gValidDetectionsData,
+            //     gridLabels
+            // );
+            // gridImage
+            //     .createPNGStream()
+            //     .pipe(
+            //         fs.createWriteStream(path.join(__dirname, "..", "grid.png"))
+            //     );
+
+            const grid = await createGridArray(
+                gridModelWidth,
+                gridModelHeight,
+                gridImage,
+                gBoxesData,
+                gScoresData,
+                gClassesData,
+                gValidDetectionsData
+            );
+
             context.res = {
                 body: JSON.stringify({
                     croppedInput: convertFromYolo(
@@ -204,10 +235,11 @@ const httpTrigger: AzureFunction = async function (
                         idCanvas.width,
                         idCanvas.height
                     ),
-                    gBoxesData,
-                    gScoresData,
-                    gClassesData,
-                    gValidDetectionsData,
+                    grid,
+                    // gBoxesData,
+                    // gScoresData,
+                    // gClassesData,
+                    // gValidDetectionsData,
                 }),
             };
 
@@ -236,4 +268,4 @@ const convertFromYolo = (
     };
 };
 
-export default httpTrigger;
+export default run;

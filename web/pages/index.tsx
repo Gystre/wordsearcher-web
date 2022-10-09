@@ -24,13 +24,8 @@ import { ExampleBox } from "../components/ExampleBox";
 import { Layout } from "../components/Layout";
 import theme from "../theme";
 import { errorAnim } from "../utils/errorAnim";
+import { ErrorCode } from "../utils/ErrorCode";
 import { uploadToB2 } from "../utils/uploadToB2";
-
-enum ErrorCode {
-    invalidUrl,
-    modelNotLoaded,
-    wordsearchNotFound,
-}
 
 const errorToast = (err: string): UseToastOptions => {
     return {
@@ -100,6 +95,7 @@ const Home: NextPage = () => {
                     return;
                 }
                 var data = await response.json();
+                console.log(data);
 
                 if (typeof data.error === "number") {
                     try {
@@ -133,12 +129,12 @@ const Home: NextPage = () => {
                                 }
                                 if (!got)
                                     throw new Error(
-                                        "Model not loaded, azure function is probably asleep. Please try again in ~5 seconds."
+                                        "Model not loaded, the azure function is probably asleep. Please try again in ~5 seconds."
                                     );
                                 break;
                             case ErrorCode.wordsearchNotFound:
                                 throw new Error(
-                                    "No wordsearch found in image. Please try using a different picture or use better lighting."
+                                    "No wordsearch found in the image. Please try using a different picture or use better lighting."
                                 );
                         }
                     } catch (e: any) {
@@ -147,14 +143,14 @@ const Home: NextPage = () => {
                         return;
                     }
                 }
-                console.log(data);
+                setStatus("Solved! Redirecting...");
 
                 const finalData = {
                     url,
                     ...data,
                 };
 
-                // insert into db
+                // insert into db and redirect
                 var dbResponse = null;
                 try {
                     dbResponse = await fetch(
@@ -175,9 +171,6 @@ const Home: NextPage = () => {
                     return;
                 }
                 var dbData = await dbResponse.json();
-
-                // push to solves/uid
-                console.log(dbData);
 
                 if (dbData.error) {
                     console.log(dbData.error);
@@ -201,7 +194,7 @@ const Home: NextPage = () => {
         onDrop,
         noClick: true,
         accept: { "image/*": [] },
-        maxSize: 10 * 1024 * 1024, // 10mb
+        maxSize: 15 * 1024 * 1024, // 15mb
     });
 
     var display: any = null;

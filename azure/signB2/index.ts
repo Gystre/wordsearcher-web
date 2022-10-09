@@ -29,8 +29,8 @@ const httpTrigger: AzureFunction = async function (
     context: Context,
     req: HttpRequest
 ): Promise<void> {
-    const fileName = req.query.fileName || (req.body && req.body.fileName);
-    const fileType = req.query.fileType || (req.body && req.body.fileType);
+    const fileName = req.query.fileName;
+    const fileType = req.query.fileType;
 
     if (
         !process.env.B2_KEY_ID ||
@@ -74,7 +74,9 @@ const httpTrigger: AzureFunction = async function (
     if (url.status != "200") {
         context.res = {
             status: 500,
-            body: { error: "Failed and returned " + url.status },
+            body: {
+                error: "Create B2 upload url failed and returned " + url.status,
+            },
         };
     }
 

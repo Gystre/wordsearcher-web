@@ -1,7 +1,6 @@
 import {
     Box,
     Button,
-    ColorModeScript,
     Flex,
     IconButton,
     Input,
@@ -19,11 +18,12 @@ import {
 } from "@chakra-ui/react";
 import { GetStaticProps, InferGetStaticPropsType } from "next";
 import { useRouter } from "next/router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BsArrowLeft, BsShareFill, BsTwitter, BsXLg } from "react-icons/bs";
 import { MdOutlineContentCopy } from "react-icons/md";
+import { Box as CustomBox } from "../../Classes/Box";
+import { Point } from "../../Classes/Point";
 import { Layout } from "../../components/Layout";
-import theme from "../../theme";
 import { cleanString } from "../../utils/cleanString";
 import { errorAnim } from "../../utils/errorAnim";
 
@@ -36,11 +36,10 @@ type Data = {
         x2: number;
         y2: number;
     };
-    gBoxesData: number[];
-    gScoresData: number[];
-    gClassesData: number[];
-    gValidDetectionsData: number;
+    grid: typeof CustomBox[][];
     createdOn: number;
+
+    error?: any; // yup validation error
 };
 
 const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
@@ -60,6 +59,8 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
     const toast = useToast();
     const wordInputRef = useRef<HTMLInputElement>(null);
     const [isMobile] = useMediaQuery("(max-width: 768px)");
+    const gridImageCanvas = useRef<HTMLCanvasElement>(null); // cropped grid image, no drawing on it (needed for redrawing the found words)
+    const canvasRef = useRef<HTMLCanvasElement>(null); // grid image with lines and boxes on it
 
     const insertWord = (word: string) => {
         if (words.length >= 100) {
@@ -107,6 +108,83 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
         if (newWords) setWords(newWords);
     };
 
+    useEffect(() => {
+        if (!data) return;
+
+        const img = new Image();
+
+        // img.src = data.url;
+        // access public folder to get testsearch.png and create a blob url for img.src
+        fetch("/testsearch.png")
+            .then((res) => res.blob())
+            .then((blob) => {
+                img.src = URL.createObjectURL(blob);
+            });
+
+        img.onload = () => {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            if (!ctx) return;
+
+            // FUTURE KYLE
+            // cropping image not working
+            // either coordinates aren't good or transforming the image wrong
+
+            // need to resize the canvas so that the coordinates match up with how the models are processing the image
+            ctx.fillStyle = "#000000";
+            const identiferRes = 800; // resolution of the input image for the identifier model
+            canvas.width = identiferRes;
+            canvas.height = identiferRes;
+
+            ctx.fillRect(0, 0, identiferRes, identiferRes);
+            const ratio = Math.min(
+                identiferRes / img.naturalWidth,
+                identiferRes / img.naturalHeight
+            );
+            const newWidth = Math.round(img.naturalWidth * ratio);
+            const newHeight = Math.round(img.naturalHeight * ratio);
+            ctx.drawImage(
+                img,
+                0,
+                0,
+                img.naturalWidth,
+                img.naturalHeight,
+                (identiferRes - newWidth) / 2,
+                (identiferRes - newHeight) / 2,
+                newWidth,
+                newHeight
+            );
+
+            const test = document.getElementById("test");
+            while (test?.firstChild) {
+                test.removeChild(test.firstChild);
+            }
+            document.getElementById("test")?.appendChild(canvas);
+
+            const p1 = new Point(data.croppedInput.x1, data.croppedInput.y1);
+            p1.draw(ctx, "blue");
+
+            const p2 = new Point(data.croppedInput.x2, data.croppedInput.y2);
+            p2.draw(ctx, "blue");
+
+            const cropped = ctx.getImageData(
+                data.croppedInput.x1,
+                data.croppedInput.y1,
+                data.croppedInput.x2 - data.croppedInput.x1,
+                data.croppedInput.y2 - data.croppedInput.y1
+            );
+
+            if (!gridImageCanvas.current) return;
+            const gridImage = gridImageCanvas.current;
+            gridImage.width = cropped.width;
+            gridImage.height = cropped.height;
+
+            const gridImageCtx = gridImage.getContext("2d");
+            if (!gridImageCtx) return;
+            gridImageCtx.putImageData(cropped, 0, 0);
+        };
+    }, [data]);
+
     if (router.isFallback)
         return (
             <Layout>
@@ -127,7 +205,7 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
 
     return (
         <Layout>
-            <ColorModeScript initialColorMode={theme.config.initialColorMode} />
+            <div id="test"></div>
             <Flex mb={2}>
                 <Button
                     mr={2}
@@ -196,12 +274,21 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
             >
                 <Box>
                     <canvas
+                        ref={gridImageCanvas}
+                        style={{
+                            // display: "none"
+                            width: 500,
+                            height: 500,
+                        }}
+                    />
+                    <canvas
                         style={{
                             backgroundColor: "grey",
                             borderRadius: 6,
                             width: "896px",
                             height: "896px",
                         }}
+                        ref={canvasRef}
                     />
                 </Box>
 
@@ -299,11 +386,18 @@ export async function getStaticPaths() {
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
     var data: Data | null = null;
+
     if (params?.uid) {
+        console.log(params.uid);
+
         const response = await fetch(
             `https://wordsearcher.azurewebsites.net/api/getSolve?uid=${params.uid}`
         );
         data = await response.json();
+
+        if (data?.error) {
+            data = null;
+        }
     }
 
     return {
