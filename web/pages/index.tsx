@@ -17,7 +17,7 @@ import { motion } from "framer-motion";
 import type { NextPage } from "next";
 import { useRouter } from "next/router";
 import { createRef, useCallback, useState } from "react";
-import { useDropzone } from "react-dropzone";
+import { FileRejection, useDropzone } from "react-dropzone";
 import { BsFillImageFill } from "react-icons/bs";
 import { ExampleBox } from "../components/ExampleBox";
 import { Layout } from "../components/Layout";
@@ -206,16 +206,33 @@ const Home: NextPage = () => {
         },
     });
 
+    const maxSize = 15; // 15mb
     const dropzoneRef = createRef<HTMLInputElement>();
-    const onDrop = useCallback((acceptedFiles: File[]) => {
-        formik.setFieldValue("file", acceptedFiles[0]);
-        formik.submitForm();
-    }, []);
+    const onDrop = useCallback(
+        (acceptedFiles: File[], fileRejections: FileRejection[]) => {
+            const error = fileRejections[0]?.errors[0]?.code;
+            if (error.length > 0) {
+                if (error === "file-invalid-type") {
+                    errorToast("This file is not an image! ╰（‵□′）╯");
+                } else if (error === "file-too-large") {
+                    errorToast(
+                        "Image is bigger than " + maxSize + "mb! (* ￣︿￣)"
+                    );
+                }
+                setCrashed();
+                return;
+            }
+
+            formik.setFieldValue("file", acceptedFiles[0]);
+            formik.submitForm();
+        },
+        []
+    );
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
         noClick: true,
         accept: { "image/*": [] },
-        maxSize: 15 * 1024 * 1024, // 15mb
+        maxSize: maxSize * 1024 * 1024,
     });
 
     var display: any = null;

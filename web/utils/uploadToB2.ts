@@ -14,7 +14,6 @@ export const uploadToB2 = async (file: File) => {
 
     const compFile = await compressImage(file);
     const savedBytes = file.size - compFile.size;
-    console.log(compFile);
 
     if (savedBytes > 0) {
         console.log("compressed image, saved:", savedBytes / 1000000, "mb");
@@ -60,7 +59,5 @@ export const uploadToB2 = async (file: File) => {
     }
 
     // get type from file.type
-    return `https://${process.env.NEXT_PUBLIC_B2_BUCKET}.${
-        process.env.NEXT_PUBLIC_B2_ENDPOINT
-    }/${fileName}.${file.type.split("/")[1]}`;
+    return `https://${process.env.NEXT_PUBLIC_B2_BUCKET}.${process.env.NEXT_PUBLIC_B2_ENDPOINT}/${fileName}`;
 };
