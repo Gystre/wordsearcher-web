@@ -21,11 +21,13 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import { BsArrowLeft, BsShareFill, BsTwitter, BsXLg } from "react-icons/bs";
 import { MdOutlineContentCopy } from "react-icons/md";
+import { Set } from "typescript";
 import { Box as CustomBox } from "../../Classes/Box";
 import { Point } from "../../Classes/Point";
 import { Layout } from "../../components/Layout";
 import { cleanString } from "../../utils/cleanString";
 import { errorAnim } from "../../utils/errorAnim";
+import { solveWordSearch } from "../../utils/solveWordSearch";
 
 type Data = {
     uid: number;
@@ -36,7 +38,7 @@ type Data = {
         x2: number;
         y2: number;
     };
-    grid: typeof CustomBox[][];
+    grid: CustomBox[][];
     createdOn: number;
 
     error?: any; // yup validation error
@@ -55,12 +57,13 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
     const [words, setWords] = useState<string[]>([]);
     const [found, setFound] = useState<Set<string>>(new Set<string>()); // solveWordSearch(): cleaned input words
     const [wordError, setWordError] = useState<string | null>(null);
+    const [grid, setGrid] = useState<CustomBox[][]>([]);
 
     const toast = useToast();
     const wordInputRef = useRef<HTMLInputElement>(null);
     const [isMobile] = useMediaQuery("(max-width: 768px)");
     const gridImageCanvas = useRef<HTMLCanvasElement>(null); // cropped grid image, no drawing on it (needed for redrawing the found words)
-    const canvasRef = useRef<HTMLCanvasElement>(null); // grid image with lines and boxes on it
+    const wsCanvas = useRef<HTMLCanvasElement>(null); // grid image with lines and boxes on it
 
     const insertWord = (word: string) => {
         if (words.length >= 100) {
@@ -95,42 +98,47 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
     // handles adding the found words and updating the state
     // need to pass in updated words array bc react doesn't rerender the canvas after an update to the state
     const resolveWordsearch = (newWords?: string[]) => {
-        // if (!debugCanvasRef.current || !tempCanvasRef.current) return;
+        if (!wsCanvas.current || !gridImageCanvas.current) return;
 
-        // const found = solveWordSearch(
-        //     debugCanvasRef.current,
-        //     tempCanvasRef.current,
-        //     grid,
-        //     newWords ? newWords : words
-        // );
-        // setFound(found);
+        const found = solveWordSearch(
+            wsCanvas.current,
+            gridImageCanvas.current,
+            grid,
+            newWords ? newWords : words
+        );
+        setFound(found);
 
         if (newWords) setWords(newWords);
     };
 
     useEffect(() => {
         if (!data) return;
+        console.log(data);
 
-        const img = new Image();
-
-        // img.src = data.url;
-        // access public folder to get testsearch.png and create a blob url for img.src
-        fetch("/testsearch.png")
-            .then((res) => res.blob())
-            .then((blob) => {
-                img.src = URL.createObjectURL(blob);
+        // need to recreate the grid from the data bc grid contains just raw data and doesn't have the special helper classes
+        const newGrid = data.grid.map((row) => {
+            return row.map((box) => {
+                return new CustomBox(
+                    box.klass,
+                    box.topLeft,
+                    box.bottomRight,
+                    box.id,
+                    box.score
+                );
             });
+        });
+        setGrid(newGrid);
+
+        // load the image
+        const img = new Image();
+        img.src = data.url;
 
         img.onload = () => {
+            // resize image and crop according to coordinates from model
             const canvas = document.createElement("canvas");
             const ctx = canvas.getContext("2d");
             if (!ctx) return;
 
-            // FUTURE KYLE
-            // cropping image not working
-            // either coordinates aren't good or transforming the image wrong
-
-            // need to resize the canvas so that the coordinates match up with how the models are processing the image
             ctx.fillStyle = "#000000";
             const identiferRes = 800; // resolution of the input image for the identifier model
             canvas.width = identiferRes;
@@ -143,6 +151,7 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
             );
             const newWidth = Math.round(img.naturalWidth * ratio);
             const newHeight = Math.round(img.naturalHeight * ratio);
+
             ctx.drawImage(
                 img,
                 0,
@@ -161,27 +170,40 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
             }
             document.getElementById("test")?.appendChild(canvas);
 
-            const p1 = new Point(data.croppedInput.x1, data.croppedInput.y1);
-            p1.draw(ctx, "blue");
-
-            const p2 = new Point(data.croppedInput.x2, data.croppedInput.y2);
-            p2.draw(ctx, "blue");
-
-            const cropped = ctx.getImageData(
-                data.croppedInput.x1,
-                data.croppedInput.y1,
-                data.croppedInput.x2 - data.croppedInput.x1,
-                data.croppedInput.y2 - data.croppedInput.y1
+            const box = new CustomBox(
+                "",
+                new Point(data.croppedInput.x1, data.croppedInput.y1),
+                new Point(data.croppedInput.x2, data.croppedInput.y2)
             );
+            box.convertFromYolo(identiferRes, identiferRes);
+            // box.draw(ctx, "#00ff00");
 
-            if (!gridImageCanvas.current) return;
+            if (!gridImageCanvas.current || !wsCanvas.current) return;
             const gridImage = gridImageCanvas.current;
-            gridImage.width = cropped.width;
-            gridImage.height = cropped.height;
+            const ws = wsCanvas.current;
+
+            const cropAndResize = document.createElement("canvas");
+            cropAndResize.width = ws.width;
+            cropAndResize.height = ws.height;
+            cropAndResize
+                .getContext("2d")
+                ?.drawImage(
+                    canvas,
+                    box.topLeft.x,
+                    box.topLeft.y,
+                    box.width,
+                    box.height,
+                    0,
+                    0,
+                    ws.width,
+                    ws.height
+                );
 
             const gridImageCtx = gridImage.getContext("2d");
-            if (!gridImageCtx) return;
-            gridImageCtx.putImageData(cropped, 0, 0);
+            const wsCanvasCtx = ws.getContext("2d");
+            if (!gridImageCtx || !wsCanvasCtx) return;
+            gridImageCtx.drawImage(cropAndResize, 0, 0);
+            wsCanvasCtx.drawImage(cropAndResize, 0, 0);
         };
     }, [data]);
 
@@ -206,6 +228,16 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
     return (
         <Layout>
             <div id="test"></div>
+            <canvas
+                ref={gridImageCanvas}
+                width={896}
+                height={896}
+                style={
+                    {
+                        // display: "none"
+                    }
+                }
+            />
             <Flex mb={2}>
                 <Button
                     mr={2}
@@ -274,21 +306,13 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
             >
                 <Box>
                     <canvas
-                        ref={gridImageCanvas}
-                        style={{
-                            // display: "none"
-                            width: 500,
-                            height: 500,
-                        }}
-                    />
-                    <canvas
                         style={{
                             backgroundColor: "grey",
                             borderRadius: 6,
-                            width: "896px",
-                            height: "896px",
                         }}
-                        ref={canvasRef}
+                        ref={wsCanvas}
+                        width={896}
+                        height={896}
                     />
                 </Box>
 

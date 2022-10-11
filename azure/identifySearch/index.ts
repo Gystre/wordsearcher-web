@@ -216,8 +216,6 @@ export const run: AzureFunction = async function (
             //     );
 
             const grid = await createGridArray(
-                gridModelWidth,
-                gridModelHeight,
                 gridImage,
                 gBoxesData,
                 gScoresData,
@@ -227,19 +225,13 @@ export const run: AzureFunction = async function (
 
             context.res = {
                 body: JSON.stringify({
-                    croppedInput: convertFromYolo(
-                        firstBox[0] - xPadding,
-                        firstBox[1] - yPadding,
-                        firstBox[2] + xPadding,
-                        firstBox[3] + yPadding,
-                        idCanvas.width,
-                        idCanvas.height
-                    ),
+                    croppedInput: {
+                        x1: firstBox[0] - xPadding,
+                        y1: firstBox[1] - yPadding,
+                        x2: firstBox[2] + xPadding,
+                        y2: firstBox[3] + yPadding,
+                    },
                     grid,
-                    // gBoxesData,
-                    // gScoresData,
-                    // gClassesData,
-                    // gValidDetectionsData,
                 }),
             };
 

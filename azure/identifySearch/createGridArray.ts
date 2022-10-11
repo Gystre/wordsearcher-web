@@ -22,8 +22,6 @@ const numberConfusions: { [key: string]: string } = {
 
 // TODO: figure out a way to reduce the amount of params lmao
 export const createGridArray = async (
-    width: number, // width of grid model input
-    height: number,
     gridImage: Canvas,
     boxesData: number[],
     scoresData: number[],
@@ -56,7 +54,7 @@ export const createGridArray = async (
         let [x1, y1, x2, y2] = boxesData.slice(i * 4, (i + 1) * 4);
 
         const box = new Box(klass, new Point(x1, y1), new Point(x2, y2), score);
-        box.convertFromYolo(width, height);
+        box.convertFromYolo(gridImage.width, gridImage.height);
 
         const newLength = boxes.push(box);
         totalArea += box.area;
@@ -115,7 +113,7 @@ export const createGridArray = async (
     }
 
     // detect really bad coverage
-    const coverage = totalArea / (width * height);
+    const coverage = totalArea / (gridImage.width * gridImage.height);
     if (coverage < 0.1) {
         console.log(
             "WARNING: not a lot of detected boxes, precision will probably be pretty bad"
@@ -126,8 +124,7 @@ export const createGridArray = async (
     // create an approximation of the grid (could have holes so we'll check for that now)
     var { grid, topBoxes, bottomBoxes, leftBoxes, rightBoxes } = sortBoxesArray(
         boxes,
-        width,
-        height
+        gridImage
     );
 
     /*
@@ -343,7 +340,7 @@ export const createGridArray = async (
         }
     }
     // fixed the holes, reconstruct the grid
-    grid = sortBoxesArray(newBoxes, width, height).grid;
+    grid = sortBoxesArray(newBoxes, gridImage).grid;
 
     console.log(`${grid[0].length}x${grid.length}`);
 
@@ -376,7 +373,7 @@ export const createGridArray = async (
 2d grid only has dimesions which could be thrown off by 1 or 2 missing boxes, ruining the algorithm
 This function is for creating a new grid everytime we create and prune boxes from the 1d array to keep the 2d grid as accurate as possible
 */
-const sortBoxesArray = (boxes: Box[], width: number, height: number) => {
+const sortBoxesArray = (boxes: Box[], gridImage: Canvas) => {
     // TODO: probs consolidate into 1 loop
     // draw a ray upwards, if it doesn't hit anything then we know we're still in the top row otherwise stop and we've found our dimension
     const sortedByY = boxes.slice(0).sort((a, b) => a.center.y - b.center.y);
@@ -387,7 +384,7 @@ const sortBoxesArray = (boxes: Box[], width: number, height: number) => {
         const ray = new Ray(
             new Point(box.center.x, box.topLeft.y), // need subtract 1 to prevent hitting itself
             "up",
-            height,
+            gridImage.height,
             box
         );
 
@@ -405,7 +402,7 @@ const sortBoxesArray = (boxes: Box[], width: number, height: number) => {
         const ray = new Ray(
             new Point(box.topLeft.x, box.center.y),
             "left",
-            width,
+            gridImage.width,
             box
         );
         if (ray.cast(boxes).length > 0) {

@@ -60,19 +60,13 @@ const httpTrigger: AzureFunction = async function (
 
     // TODO: verify url is valid and is image
     const url = req.body.url;
+    const grid = req.body.grid;
     const croppedInput = req.body.croppedInput;
-    const gBoxesData = req.body.gBoxesData;
-    const gScoresData = req.body.gScoresData;
-    const gClassesData = req.body.gClassesData;
-    const gValidDetectionsData = req.body.gValidDetectionsData;
     const { resource } = await container.items.create({
         uid,
         url,
+        grid,
         croppedInput,
-        gBoxesData,
-        gScoresData,
-        gClassesData,
-        gValidDetectionsData,
         createdOn: Date.now(),
         readableDate: new Date().toISOString(),
     });

@@ -11,7 +11,6 @@ import {
     useColorMode,
     useMediaQuery,
     useToast,
-    UseToastOptions,
 } from "@chakra-ui/react";
 import { useFormik } from "formik";
 import { motion } from "framer-motion";
@@ -27,17 +26,6 @@ import { errorAnim } from "../utils/errorAnim";
 import { ErrorCode } from "../utils/ErrorCode";
 import { uploadToB2 } from "../utils/uploadToB2";
 
-const errorToast = (err: string): UseToastOptions => {
-    return {
-        title: "Error",
-        description: err,
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-        position: "top",
-    };
-};
-
 const Home: NextPage = () => {
     const [isMobile] = useMediaQuery("(max-width: 768px)");
     const { colorMode } = useColorMode();
@@ -47,6 +35,17 @@ const Home: NextPage = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
     const [status, setStatus] = useState("");
+
+    const errorToast = (err: string) => {
+        toast({
+            title: "Error",
+            description: err,
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+            position: "top",
+        });
+    };
 
     const setCrashed = () => {
         setLoading(false);
@@ -67,7 +66,7 @@ const Home: NextPage = () => {
                 try {
                     url = await uploadToB2(values.file);
                 } catch (e: any) {
-                    toast(errorToast(e.message));
+                    errorToast(e.message);
                     setCrashed();
                     return;
                 }
@@ -80,22 +79,17 @@ const Home: NextPage = () => {
                 console.log("url:", url);
                 setStatus("Identifying wordsearch...");
 
-                var response = null;
-                try {
-                    response = await fetch(
-                        `https://wordsearcher.azurewebsites.net/api/identifysearch?url=${url}`
-                    );
-                } catch (e: any) {
-                    toast(
-                        errorToast(
-                            "Failed to connect to server. It might be down right now :("
-                        )
+                var response = await fetch(
+                    `https://wordsearcher.azurewebsites.net/api/identifysearch?url=${url}`
+                );
+                if (!response.ok) {
+                    errorToast(
+                        "Failed to connect to server. It might be down right now :("
                     );
                     setCrashed();
                     return;
                 }
                 var data = await response.json();
-                console.log(data);
 
                 if (typeof data.error === "number") {
                     try {
@@ -114,18 +108,23 @@ const Home: NextPage = () => {
                                     await new Promise((r) =>
                                         setTimeout(r, 3000)
                                     );
-                                    try {
-                                        const newResponse = await fetch(
-                                            `https://wordsearcher.azurewebsites.net/api/identifysearch?url=${url}`
-                                        );
-                                        const newData =
-                                            await newResponse.json();
-                                        if (!newData.error) {
-                                            data = newData;
-                                            got = true;
-                                            break;
-                                        }
-                                    } catch (e: any) {}
+                                    await fetch(
+                                        `https://wordsearcher.azurewebsites.net/api/identifysearch?url=${url}`
+                                    )
+                                        .then((response) => {
+                                            if (response.ok) {
+                                                return response.json();
+                                            }
+                                            throw new Error("");
+                                        })
+                                        .then((newData) => {
+                                            if (!newData.error) {
+                                                data = newData;
+                                                got = true;
+                                            }
+                                        })
+                                        .catch((e) => {});
+                                    if (got) break;
                                 }
                                 if (!got)
                                     throw new Error(
@@ -138,12 +137,13 @@ const Home: NextPage = () => {
                                 );
                         }
                     } catch (e: any) {
-                        toast(errorToast(e.message));
+                        errorToast(e.message);
                         setCrashed();
                         return;
                     }
                 }
-                setStatus("Solved! Redirecting...");
+
+                setStatus("Working...");
 
                 const finalData = {
                     url,
@@ -151,37 +151,58 @@ const Home: NextPage = () => {
                 };
 
                 // insert into db and redirect
-                var dbResponse = null;
-                try {
-                    dbResponse = await fetch(
-                        "https://wordsearcher.azurewebsites.net/api/insertSolve",
-                        {
-                            method: "POST",
-                            body: JSON.stringify(finalData),
+                var dbResponse = await fetch(
+                    "https://wordsearcher.azurewebsites.net/api/insertSolve",
+                    {
+                        method: "POST",
+                        body: JSON.stringify(finalData),
+                    }
+                );
+
+                // try it again 3 more times cuz gives 500 error sometimes???
+                if (!dbResponse.ok) {
+                    var got = false;
+                    for (let i = 1; i <= 3; i++) {
+                        setStatus(
+                            "Failed to insert into database, attempt: " +
+                                i +
+                                "..."
+                        );
+                        await new Promise((r) => setTimeout(r, 3000));
+                        dbResponse = await fetch(
+                            "https://wordsearcher.azurewebsites.net/api/insertSolve",
+                            {
+                                method: "POST",
+                                body: JSON.stringify(finalData),
+                            }
+                        );
+                        if (dbResponse.ok) {
+                            got = true;
+                            break;
                         }
-                    );
-                } catch (e: any) {
-                    console.log(e);
-                    toast(
+                    }
+
+                    if (!got) {
                         errorToast(
-                            "Failed to insert into the database. The database might be down :("
-                        )
+                            "Failed to insert into the database. Please try again."
+                        );
+                        setCrashed();
+                        return;
+                    }
+                }
+
+                var dbData = await dbResponse.json();
+                if (dbData.error) {
+                    errorToast(
+                        "The developer is missing the credentials to the database so nothing will work. Please try again later."
                     );
                     setCrashed();
                     return;
                 }
-                var dbData = await dbResponse.json();
 
-                if (dbData.error) {
-                    console.log(dbData.error);
-                    toast(errorToast(dbData.error));
-                    setCrashed();
-                    return;
-                }
-
+                setStatus("Solved! Going to word search page...");
                 router.push(`/solve/${dbData.uid}`);
             }
-            setLoading(false);
         },
     });
 

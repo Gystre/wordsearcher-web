@@ -14,13 +14,18 @@ export class Box {
         klass: string,
         topLeft: Point,
         bottomRight: Point,
+        id: number = Box.getNextId(),
         score: number = 0
     ) {
         this.klass = klass;
         this.topLeft = topLeft;
         this.bottomRight = bottomRight;
 
-        this.id = Box.getNextId();
+        this.id = id;
+
+        // in the case of creating new boxes with precreated id's
+        // ensures the uniqueness of the number
+        Box.nextId = Math.max(Box.nextId, id + 1);
 
         if (score) {
             this.score = score;

@@ -43,6 +43,7 @@ const httpTrigger: AzureFunction = async function (
             body: { error: ErrorCode.missingCreds },
         };
     }
+
     // get the item from the database
     const results = await container?.items
         .query(`select * from c where c.uid = '${uid}'`)
@@ -60,10 +61,7 @@ const httpTrigger: AzureFunction = async function (
         uid: resource.uid,
         url: resource.url,
         croppedInput: resource.croppedInput,
-        gBoxesData: resource.gBoxesData,
-        gScoresData: resource.gScoresData,
-        gClassesData: resource.gClassesData,
-        gValidDetectionsData: resource.gValidDetectionsData,
+        grid: resource.grid,
         createdOn: resource.createdOn,
     };
 
