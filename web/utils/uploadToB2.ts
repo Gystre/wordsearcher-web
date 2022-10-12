@@ -8,15 +8,16 @@ Lower priority rn since crypto-js is only 50kb
 */
 
 export const uploadToB2 = async (file: File) => {
-    if (!/image/i.test(file.type)) {
-        throw new Error("File is not an image");
-    }
-
+    // image is coming from mobile phone camera, cut res in half
     const compFile = await compressImage(file);
     const savedBytes = file.size - compFile.size;
 
     if (savedBytes > 0) {
-        console.log("compressed image, saved:", savedBytes / 1000000, "mb");
+        console.log(
+            "compressed image, saved:",
+            (savedBytes / 1000000).toFixed(2),
+            "mb"
+        );
         file = compFile;
     }
 

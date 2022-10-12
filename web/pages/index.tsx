@@ -62,18 +62,43 @@ const Home: NextPage = () => {
             setError(false);
             setLoading(true);
             var url = "";
-            if (values.file) {
-                try {
+            try {
+                if (values.file) {
                     url = await uploadToB2(values.file);
-                } catch (e: any) {
-                    errorToast(e.message);
-                    setCrashed();
-                    return;
+                } else if (values.url.length > 0) {
+                    // this is a little overengineered but wutever
+                    const fileNameMaybeExtension = values.url.split("/").pop();
+                    const extension = fileNameMaybeExtension?.split(".").pop();
+                    const hasExtension = extension != fileNameMaybeExtension;
+                    var fileName = "";
+                    if (hasExtension) {
+                        // the file is guaranteed to have an extension here since the extension variable exists
+                        fileName = fileNameMaybeExtension as string;
+                    } else {
+                        fileName = fileNameMaybeExtension + ".png";
+                    }
+
+                    // download image url into a file object
+                    const file = await fetch(values.url)
+                        .then((r) => r.blob())
+                        .then(
+                            (blobFile) =>
+                                new File([blobFile], fileName, {
+                                    type: hasExtension
+                                        ? `image/${extension}`
+                                        : "image/png",
+                                })
+                        );
+
+                    url = await uploadToB2(file);
                 }
-                setStatus("Uploaded file...");
-            } else if (values.url.length > 0) {
-                url = values.url;
+            } catch (e: any) {
+                errorToast(e.message);
+                setCrashed();
+                return;
             }
+
+            setStatus("Uploaded file...");
 
             if (url.length > 0) {
                 console.log("url:", url);
@@ -211,7 +236,7 @@ const Home: NextPage = () => {
     const onDrop = useCallback(
         (acceptedFiles: File[], fileRejections: FileRejection[]) => {
             const error = fileRejections[0]?.errors[0]?.code;
-            if (error.length > 0) {
+            if (fileRejections.length > 0) {
                 if (error === "file-invalid-type") {
                     errorToast("This file is not an image! ╰（‵□′）╯");
                 } else if (error === "file-too-large") {

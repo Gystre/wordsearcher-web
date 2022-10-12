@@ -3,8 +3,7 @@ production website for wordsearcher
 
 # TODO
 ## high priority
-* if width > 3000, resize resolution to half
-* upload via url then save images to backblaze
+* test upload via url during prod
 
 ## mid priority
 * secure functions by only allowing the react app to use them, no one else
@@ -15,6 +14,7 @@ production website for wordsearcher
 * package to share error enums and other logic to reduce copy pasting 
 	* causes issues that take time to solve during deployment so might not
 	* consider if going to update wordsearch algorithm in the future
+* use non native library to calculate sha1 in uploadToB2.ts to avoid crypto.js (other libraries give wrong hash no idea why)
 
 # make sure
 * azure using node 14 and 64 bit
