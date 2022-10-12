@@ -26,6 +26,7 @@ import { Box as CustomBox } from "../../Classes/Box";
 import { Point } from "../../Classes/Point";
 import { Layout } from "../../components/Layout";
 import { cleanString } from "../../utils/cleanString";
+import { drawBoxes } from "../../utils/drawBoxes";
 import { errorAnim } from "../../utils/errorAnim";
 import { solveWordSearch } from "../../utils/solveWordSearch";
 
@@ -164,12 +165,6 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
                 newHeight
             );
 
-            const test = document.getElementById("test");
-            while (test?.firstChild) {
-                test.removeChild(test.firstChild);
-            }
-            document.getElementById("test")?.appendChild(canvas);
-
             const box = new CustomBox(
                 "",
                 new Point(data.croppedInput.x1, data.croppedInput.y1),
@@ -204,6 +199,8 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
             if (!gridImageCtx || !wsCanvasCtx) return;
             gridImageCtx.drawImage(cropAndResize, 0, 0);
             wsCanvasCtx.drawImage(cropAndResize, 0, 0);
+
+            drawBoxes(ws, grid);
         };
     }, [data]);
 
@@ -227,16 +224,13 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
 
     return (
         <Layout>
-            <div id="test"></div>
             <canvas
                 ref={gridImageCanvas}
                 width={896}
                 height={896}
-                style={
-                    {
-                        // display: "none"
-                    }
-                }
+                style={{
+                    display: "none",
+                }}
             />
             <Flex mb={2}>
                 <Button
@@ -319,42 +313,6 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
                 {!isMobile && <Box mr={2} />}
 
                 <Flex direction="column" mt={isMobile ? 2 : 0}>
-                    <Flex>
-                        <Flex direction="column" mr={2}>
-                            {/* add some glow to this later to make it more obvious */}
-                            <Input
-                                ref={wordInputRef}
-                                animation={wordError ? errorAnim : ""}
-                                placeholder="Add a word!"
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                        if (insertWord(e.currentTarget.value)) {
-                                            e.currentTarget.value = "";
-                                        }
-                                    }
-                                }}
-                            />
-                            {wordError && (
-                                <Text align="left" size="sm" color="red">
-                                    {wordError}
-                                </Text>
-                            )}
-                        </Flex>
-                        <Button
-                            variant="primary"
-                            onClick={(e) => {
-                                if (!wordInputRef.current) return;
-
-                                var value = wordInputRef.current.value;
-                                if (insertWord(value)) {
-                                    value = "";
-                                }
-                            }}
-                        >
-                            Add
-                        </Button>
-                    </Flex>
-                    <br />
                     {words.map((w, i) => (
                         <Flex key={i} align="center">
                             {/* individual word display */}
@@ -389,6 +347,49 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
                             />
                         </Flex>
                     ))}
+                    <br />
+                    <Flex>
+                        <Flex direction="column" mr={2}>
+                            {/* add some glow to this later to make it more obvious */}
+                            <Input
+                                ref={wordInputRef}
+                                animation={wordError ? errorAnim : ""}
+                                placeholder="Add a word!"
+                                onBlur={(e) => {
+                                    if (e.currentTarget.value.length == 0)
+                                        return;
+                                    if (insertWord(e.currentTarget.value)) {
+                                        e.currentTarget.value = "";
+                                    }
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        if (insertWord(e.currentTarget.value)) {
+                                            e.currentTarget.value = "";
+                                        }
+                                    }
+                                }}
+                            />
+                            {wordError && (
+                                <Text align="left" size="sm" color="red">
+                                    {wordError}
+                                </Text>
+                            )}
+                        </Flex>
+                        <Button
+                            variant="primary"
+                            onClick={(e) => {
+                                if (!wordInputRef.current) return;
+
+                                var value = wordInputRef.current.value;
+                                if (insertWord(value)) {
+                                    value = "";
+                                }
+                            }}
+                        >
+                            Add
+                        </Button>
+                    </Flex>
                 </Flex>
             </Flex>
             <Text mt={2}>

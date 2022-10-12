@@ -81,7 +81,7 @@ export class Box {
         color: string = "#00FF00",
         label?: string
     ) => {
-        const font = "16px sans-serif";
+        const font = "16px Segoe UI";
         ctx.font = font;
         ctx.textBaseline = "top";
 
@@ -127,7 +127,7 @@ export class Box {
 
         if (!label) return;
 
-        const font = "16px sans-serif";
+        const font = "16px Segoe UI";
         ctx.font = font;
         ctx.textBaseline = "top";
 
