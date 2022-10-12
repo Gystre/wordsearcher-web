@@ -17,11 +17,11 @@ import {
     useToast,
 } from "@chakra-ui/react";
 import { GetStaticProps, InferGetStaticPropsType } from "next";
+import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import { BsArrowLeft, BsShareFill, BsTwitter, BsXLg } from "react-icons/bs";
 import { MdOutlineContentCopy } from "react-icons/md";
-import { Set } from "typescript";
 import { Box as CustomBox } from "../../Classes/Box";
 import { Point } from "../../Classes/Point";
 import { Layout } from "../../components/Layout";
@@ -171,7 +171,6 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
                 new Point(data.croppedInput.x2, data.croppedInput.y2)
             );
             box.convertFromYolo(identiferRes, identiferRes);
-            // box.draw(ctx, "#00ff00");
 
             if (!gridImageCanvas.current || !wsCanvas.current) return;
             const gridImage = gridImageCanvas.current;
@@ -200,6 +199,10 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
             gridImageCtx.drawImage(cropAndResize, 0, 0);
             wsCanvasCtx.drawImage(cropAndResize, 0, 0);
 
+            // FUTURE KYLE
+            // drawBoxes requires rerender of canvas to update what's on it
+            // create dynamic seo tags based on data inside of getStaticProps?
+
             drawBoxes(ws, grid);
         };
     }, [data]);
@@ -221,9 +224,36 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
     }
 
     const url = process.env.NEXT_PUBLIC_URL + `/solve/${uid}`;
+    const title = "Wordsearcher";
+    const description =
+        "This word search was solved with Wordsearcher! (/≧▽≦)/";
 
     return (
         <Layout>
+            <Head>
+                <title>{title + " - " + data.uid}</title>
+                <meta name="title" content={title} />
+                <meta name="description" content={description} />
+                <meta name="copyright" content="Kyle Yu" />
+                <meta
+                    name="keywords"
+                    content="wordsearcher,word search,solve"
+                />
+                <meta name="theme-color" content="#FF9A00" />
+                <link rel="icon" href="/favicon.ico" />
+
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content={url} />
+                <meta property="og:title" content={title} />
+                <meta property="og:description" content={description} />
+                <meta property="og:image" content={data.url} />
+
+                <meta property="twitter:card" content="summary_large_image" />
+                <meta property="twitter:url" content={url} />
+                <meta property="twitter:title" content="Wordsearcher" />
+                <meta property="twitter:description" content={description} />
+                <meta property="twitter:image" content={data.url} />
+            </Head>
             <canvas
                 ref={gridImageCanvas}
                 width={896}
@@ -392,11 +422,11 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
                     </Flex>
                 </Flex>
             </Flex>
-            <Text mt={2}>
+            {/* <Text mt={2}>
                 <b>
                     Not working? Try tapping on a letter to change its contents!
                 </b>
-            </Text>
+            </Text> */}
         </Layout>
     );
 };
@@ -413,8 +443,6 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     var data: Data | null = null;
 
     if (params?.uid) {
-        console.log(params.uid);
-
         const response = await fetch(
             `https://wordsearcher.azurewebsites.net/api/getSolve?uid=${params.uid}`
         );

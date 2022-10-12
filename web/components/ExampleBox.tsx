@@ -9,7 +9,7 @@ interface ExampleBoxProps {
 export const ExampleBox: React.FC<ExampleBoxProps> = ({ imageUrl }) => {
     const [isMobile] = useMediaQuery("(max-width: 768px)");
 
-    const size = isMobile ? 300 : 150;
+    const size = isMobile ? 275 : 150;
 
     return (
         // TODO: have this go to precreated link later

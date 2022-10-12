@@ -15,6 +15,7 @@ import {
 import { useFormik } from "formik";
 import { motion } from "framer-motion";
 import type { NextPage } from "next";
+import Head from "next/head";
 import { useRouter } from "next/router";
 import { createRef, useCallback, useState } from "react";
 import { FileRejection, useDropzone } from "react-dropzone";
@@ -314,12 +315,71 @@ const Home: NextPage = () => {
 
     return (
         <Layout>
+            <Head>
+                <title>Wordsearcher</title>
+                <meta name="title" content="Wordsearcher" />
+
+                <meta
+                    name="description"
+                    content="Have a word search you don't feel like solving? Solve it in Wordsearcher with just a picture!"
+                />
+
+                <meta name="copyright" content="Kyle Yu" />
+
+                <meta
+                    name="keywords"
+                    content="wordsearcher,word search,solve"
+                />
+
+                <meta property="og:type" content="website" />
+
+                <meta name="theme-color" content="#FF9A00" />
+
+                <meta
+                    property="og:url"
+                    content="https://wordsearcher.kyleyu.org"
+                />
+
+                <meta property="og:title" content="Wordsearcher" />
+
+                <meta
+                    property="og:description"
+                    content="Have a word search you don't feel like solving? Solve it in Wordsearcher with just a picture!"
+                />
+
+                <meta
+                    property="og:image"
+                    content="https://cdn.discordapp.com/attachments/200994742782132224/1029618061029941258/wordsearcher_preview_image.png"
+                />
+
+                <meta property="twitter:card" content="summary_large_image" />
+
+                <meta
+                    property="twitter:url"
+                    content="https://wordsearcher.kyleyu.org"
+                />
+
+                <meta property="twitter:title" content="Wordsearcher" />
+
+                <meta
+                    property="twitter:description"
+                    content="Have a word search you don't feel like solving? Solve it in Wordsearcher with just a picture!"
+                />
+
+                <meta
+                    property="twitter:image"
+                    content="https://cdn.discordapp.com/attachments/200994742782132224/1029618061029941258/wordsearcher_preview_image.png"
+                />
+                <link rel="icon" href="/favicon.ico" />
+            </Head>
+            <div id="test"></div>
             <ColorModeScript initialColorMode={theme.config.initialColorMode} />
-            <Heading mb={4}>Solve any wordsearch with just a picture!</Heading>
+            <Heading mb={2}>Solve any wordsearch with just a picture!</Heading>
             <form onSubmit={formik.handleSubmit}>
                 <div {...getRootProps()}>
                     <Flex
-                        padding={isMobile ? 2 : 0}
+                        margin={2}
+                        padding={2}
                         border="dashed 2px"
                         borderColor={error ? "red" : "gray.300"}
                         borderRadius={6}

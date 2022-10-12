@@ -7,6 +7,7 @@ import {
     useMediaQuery,
 } from "@chakra-ui/react";
 import Image from "next/image";
+import Link from "next/link";
 import React from "react";
 import { Circle } from "./Circle";
 import { GithubIcon } from "./GithubIcon";
@@ -29,11 +30,14 @@ export const Footer: React.FC<FooterProps> = ({}) => {
             py={8}
             maxW={800}
         >
-            <Image src="/logo.png" alt="logo" width={25} height={25} />
-
-            <Heading size="sm" userSelect="none">
-                Wordsearcher
-            </Heading>
+            <Link href="/">
+                <Flex align="center" cursor="pointer">
+                    <Image src="/logo.png" alt="logo" width={25} height={25} />
+                    <Heading size="sm" userSelect="none">
+                        Wordsearcher
+                    </Heading>
+                </Flex>
+            </Link>
 
             <Box ml={2} />
             {!isMobile ? (

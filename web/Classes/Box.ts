@@ -104,7 +104,9 @@ export class Box {
         );
 
         // da text
-        ctx.fillStyle = "#000000";
+        const lightMode =
+            localStorage.getItem("chakra-ui-color-mode") === "light";
+        ctx.fillStyle = lightMode ? "#000000" : "#FFFFFF";
         ctx.fillText(
             label,
             this.topLeft.x - 1,
@@ -143,7 +145,9 @@ export class Box {
         );
 
         // da text
-        ctx.fillStyle = "#000000";
+        const lightMode =
+            localStorage.getItem("chakra-ui-color-mode") === "light";
+        ctx.fillStyle = lightMode ? "#000000" : "#FFFFFF";
         ctx.fillText(
             label,
             this.topLeft.x - 1,
