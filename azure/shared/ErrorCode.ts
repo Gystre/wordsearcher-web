@@ -4,7 +4,9 @@ export enum ErrorCode {
     noEntry,
 
     // identifySearch
-    invalidUrl,
+    invalidUrl, // url is not a valid image
     modelNotLoaded,
     wordsearchNotFound,
+    b2UploadUrlFailed,
+    b2UploadFailed,
 }

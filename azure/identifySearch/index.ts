@@ -71,6 +71,7 @@ export const run: AzureFunction = async function (
     }
 
     // download url into a html imge
+    // NOTE: model inconsistency could be from the way i load in the image?
     var image: any = null;
     try {
         await loadImage(url).then((downloadedImage) => {

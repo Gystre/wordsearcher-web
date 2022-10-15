@@ -1,6 +1,9 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import B2 from "backblaze-b2";
 import { object, string } from "yup";
+import { ErrorCode } from "../shared/ErrorCode";
+import { genFileName } from "../shared/genFileName";
+import { UrlData } from "../shared/UrlData";
 
 const createS3Schema = object().shape({
     fileName: string().min(1).max(255).required(),
@@ -13,17 +16,6 @@ const createS3Schema = object().shape({
         })
         .required(),
 });
-
-function yyyymmdd() {
-    var x = new Date();
-    var y = x.getFullYear().toString();
-    var m = (x.getMonth() + 1).toString();
-    var d = x.getDate().toString();
-    d.length == 1 && (d = "0" + d);
-    m.length == 1 && (m = "0" + m);
-    var yyyymmdd = y + m + d;
-    return yyyymmdd;
-}
 
 const httpTrigger: AzureFunction = async function (
     context: Context,
@@ -48,16 +40,10 @@ const httpTrigger: AzureFunction = async function (
     } catch (e: any) {
         context.res = {
             status: 500,
-            body: { error: e.message }, // share code between functions, was a guide somewhere :P
+            body: { error: e.message },
         };
         return;
     }
-
-    // generate safe file name
-    const date = yyyymmdd();
-    const randomString = Math.random().toString(36).substring(2, 7);
-    const cleanFileName = fileName.toLowerCase().replace(/[^a-z0-9]/g, "-");
-    const newName = `images/${date}-${randomString}-${cleanFileName}`;
 
     // get signed backblaze url
     const b2 = new B2({
@@ -75,16 +61,20 @@ const httpTrigger: AzureFunction = async function (
         context.res = {
             status: 500,
             body: {
+                error: ErrorCode.b2UploadUrlFailed,
+            },
+        };
+        return;
+    }
+
+    if (url.status != "200") {
+        context.res = {
+            status: 500,
+            body: {
                 error: "Create B2 upload url failed and returned " + url.status,
             },
         };
     }
-
-    type UrlData = {
-        authorizationToken: string;
-        bucketId: string;
-        uploadUrl: string;
-    };
 
     const data: UrlData = url.data;
 
@@ -92,7 +82,7 @@ const httpTrigger: AzureFunction = async function (
         body: {
             uploadUrl: data.uploadUrl,
             authorizationToken: data.authorizationToken,
-            fileName: newName,
+            fileName: genFileName(fileName),
         },
     };
 };
