@@ -8,7 +8,7 @@ import { genFileName } from "../shared/genFileName";
 import { UrlData } from "../shared/UrlData";
 
 const urlSchema = object().shape({
-    url: string().url().required(),
+    url: string().min(1).max(1000).url().required(),
 });
 
 const httpTrigger: AzureFunction = async function (
@@ -24,7 +24,7 @@ const httpTrigger: AzureFunction = async function (
     ) {
         context.res = {
             status: 500,
-            body: "Missing B2 credentials",
+            body: { error: "Missing B2 credentials" },
         };
     }
 
@@ -32,6 +32,7 @@ const httpTrigger: AzureFunction = async function (
         await urlSchema.validate({ url });
     } catch (e: any) {
         context.res = {
+            status: 500,
             body: { error: e.message },
         };
         return;
@@ -51,32 +52,10 @@ const httpTrigger: AzureFunction = async function (
         fileName = fileNameMaybeExtension + ".png";
     }
 
-    // download image and upload to b2
-    const b2 = new B2({
-        applicationKeyId: process.env.B2_KEY_ID as string,
-        applicationKey: process.env.B2_APPLICATION_KEY as string,
-    });
-    await b2.authorize();
-
-    const uploadUrlResponse = await b2.getUploadUrl({
-        bucketId: process.env.B2_BUCKET_ID as string,
-    });
-
-    if (uploadUrlResponse.status != "200") {
-        context.res = {
-            status: 500,
-            body: {
-                error: ErrorCode.b2UploadUrlFailed,
-            },
-        };
-        return;
-    }
-
     // fetch image
     const response = await fetch(url);
     if (!response.ok) {
         context.res = {
-            status: 500,
             body: {
                 error: ErrorCode.invalidUrl,
             },
@@ -92,13 +71,36 @@ const httpTrigger: AzureFunction = async function (
     }
     var buffer = await response.buffer();
 
-    const image = await new Promise<Image>((resolve, reject) => {
+    // max size is 15mb on frontend so just copy it over here too
+    if (buffer.byteLength > 15 * 1024 * 1024) {
+        context.res = {
+            body: {
+                error: ErrorCode.imageTooBig,
+            },
+        };
+        return;
+    }
+
+    // verify if it's an image
+    const image = await new Promise<Image | null>((resolve, reject) => {
         var image = new Image();
         image.src = url; // fetching this twice but wutever
         image.onload = function () {
             resolve(image);
         };
+        image.onerror = function () {
+            resolve(null);
+        };
     });
+
+    if (!image) {
+        context.res = {
+            body: {
+                error: ErrorCode.invalidImage,
+            },
+        };
+        return;
+    }
 
     // compress
     if (image.width >= 1000 || image.height >= 1000) {
@@ -140,11 +142,29 @@ const httpTrigger: AzureFunction = async function (
         }
     }
 
-    // upload
-    const data: UrlData = uploadUrlResponse.data;
+    // get the upload url
+    const b2 = new B2({
+        applicationKeyId: process.env.B2_KEY_ID as string,
+        applicationKey: process.env.B2_APPLICATION_KEY as string,
+    });
+    await b2.authorize();
+
+    const uploadUrlResponse = await b2.getUploadUrl({
+        bucketId: process.env.B2_BUCKET_ID as string,
+    });
+
+    if (uploadUrlResponse.status != "200") {
+        context.res = {
+            body: {
+                error: ErrorCode.b2UploadUrlFailed,
+            },
+        };
+        return;
+    }
 
     // upload file
-    const newFileName = genFileName(fileName);
+    const data: UrlData = uploadUrlResponse.data;
+    const newFileName = genFileName(fileName) + "." + extension;
     const uploadResponse = await b2.uploadFile({
         uploadUrl: data.uploadUrl,
         uploadAuthToken: data.authorizationToken,
@@ -153,7 +173,6 @@ const httpTrigger: AzureFunction = async function (
     });
     if (uploadResponse.status != "200") {
         context.res = {
-            status: 500,
             body: {
                 error: ErrorCode.b2UploadFailed,
             },
@@ -161,16 +180,10 @@ const httpTrigger: AzureFunction = async function (
         return;
     }
 
-    // FUTURE KYLE
-    // file not uploaded? was working earlier
-
-    console.log(uploadResponse);
-    console.log("fileName:", fileName);
-    console.log("newFileName:", newFileName);
-    console.log("extension:", extension);
-
     context.res = {
-        body: `https://${process.env.NEXT_PUBLIC_B2_BUCKET}.${process.env.NEXT_PUBLIC_B2_ENDPOINT}/${newFileName}.${extension}`,
+        body: JSON.stringify({
+            url: `https://${process.env.NEXT_PUBLIC_B2_BUCKET}.${process.env.NEXT_PUBLIC_B2_ENDPOINT}/${newFileName}`,
+        }),
     };
 };
 

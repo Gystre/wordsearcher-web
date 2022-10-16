@@ -6,8 +6,8 @@ production website for wordsearcher
 
 ## high priority
 
--   test upload via url during prod
--   mobile view for [uid].tsx
+-   better ux for wordsearcher page
+    -   mobile view for [uid].tsx
     -   resize word search like an image (convert box coordinates to make sure everything stays where it is)
 
 ## mid priority
@@ -26,9 +26,9 @@ production website for wordsearcher
 # make sure
 
 -   azure using node 14 and 64 bit
--   domain added to cors in function app
+-   localhost domain is added to cors in azure function app
 -   set .env in vercel for website
 -   set .env in azure for server
--   visual studio 2019 installed to build tensorflow binaries on `yarn install`
--   sync env vars with `f1` -> `Azure Functions: Download Remote Settings...`
--   if only see "select subscriptions" in azure extension, keep signing in and out?
+-   visual studio 2019 installed with c++ devlopment kit to build tensorflow binaries on `yarn install`
+-   sync env vars locally with `f1` -> `Azure Functions: Download Remote Settings...`
+-   if only see "select subscriptions" in azure extension, keep signing in and out ig

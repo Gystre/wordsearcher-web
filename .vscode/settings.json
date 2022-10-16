@@ -1,6 +1,8 @@
 {
     "azureFunctions.deploySubpath": "azure",
-    "azureFunctions.preDeployTask": "yarn prune (functions)",
+
+    // yarn prunes functions on yarn install so don't need
+    // "azureFunctions.preDeployTask": "yarn prune (functions)",
     "azureFunctions.postDeployTask": "yarn install (functions)",
     "azureFunctions.projectLanguage": "TypeScript",
     "azureFunctions.projectRuntime": "~4",

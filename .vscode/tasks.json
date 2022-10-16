@@ -28,16 +28,6 @@
             "options": {
                 "cwd": "${workspaceFolder}/azure"
             }
-        },
-        {
-            "type": "shell",
-            "label": "yarn prune (functions)",
-            "command": "yarn prune --production",
-            "dependsOn": "yarn build (functions)",
-            "problemMatcher": [],
-            "options": {
-                "cwd": "${workspaceFolder}/azure"
-            }
         }
     ]
 }

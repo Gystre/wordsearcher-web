@@ -26,6 +26,10 @@ import theme from "../theme";
 import { errorAnim } from "../utils/errorAnim";
 import { ErrorCode } from "../utils/ErrorCode";
 import { uploadToB2 } from "../utils/uploadToB2";
+import { validateUrl } from "../utils/validateUrl";
+
+// max size of uploaded image in mb
+const maxSize = 15;
 
 const Home: NextPage = () => {
     const [isMobile] = useMediaQuery("(max-width: 768px)");
@@ -63,35 +67,62 @@ const Home: NextPage = () => {
             setError(false);
             setLoading(true);
             var url = "";
+
             try {
                 if (values.file) {
                     url = await uploadToB2(values.file);
                 } else if (values.url.length > 0) {
-                    // this is a little overengineered but wutever
-                    const fileNameMaybeExtension = values.url.split("/").pop();
-                    const extension = fileNameMaybeExtension?.split(".").pop();
-                    const hasExtension = extension != fileNameMaybeExtension;
-                    var fileName = "";
-                    if (hasExtension) {
-                        // the file is guaranteed to have an extension here since the extension variable exists
-                        fileName = fileNameMaybeExtension as string;
-                    } else {
-                        fileName = fileNameMaybeExtension + ".png";
+                    if (!validateUrl(values.url)) {
+                        errorToast("Invalid URL");
+                        setCrashed();
+                        return;
                     }
 
-                    // download image url into a file object
-                    const file = await fetch(values.url)
-                        .then((r) => r.blob())
-                        .then(
-                            (blobFile) =>
-                                new File([blobFile], fileName, {
-                                    type: hasExtension
-                                        ? `image/${extension}`
-                                        : "image/png",
-                                })
-                        );
+                    const uploadResponse = await fetch(
+                        "https://wordsearcher.azurewebsites.net/api/uploadB2",
+                        {
+                            method: "POST",
+                            body: JSON.stringify({ url: values.url }),
+                        }
+                    );
 
-                    url = await uploadToB2(file);
+                    if (uploadResponse.status == 200) {
+                        const data = await uploadResponse.json();
+
+                        if (data.error) {
+                            if (data.error == ErrorCode.invalidUrl) {
+                                errorToast("Invalid URL");
+                            } else if (data.error == ErrorCode.imageTooBig) {
+                                errorToast(
+                                    "Image is bigger than " + maxSize + "mb"
+                                );
+                            } else if (data.error == ErrorCode.invalidImage) {
+                                errorToast(
+                                    "Invalid Image: URL does not lead to an image"
+                                );
+                            } else if (
+                                data.error == ErrorCode.b2UploadUrlFailed
+                            ) {
+                                errorToast("Failed to get upload URL from B2");
+                            } else if (data.error == ErrorCode.b2UploadFailed) {
+                                errorToast(
+                                    "Failed to upload to B2. I might have deleted the upload bucket or smthn"
+                                );
+                            }
+
+                            setCrashed();
+                            return;
+                        }
+                        url = data.url;
+                    }
+                    if (uploadResponse.status == 500) {
+                        errorToast(
+                            "Unhandled error. For the developer check the console"
+                        );
+                        console.log(await uploadResponse.text());
+                        setCrashed();
+                        return;
+                    }
                 }
             } catch (e: any) {
                 errorToast(e.message);
@@ -115,8 +146,8 @@ const Home: NextPage = () => {
                     setCrashed();
                     return;
                 }
-                var data = await response.json();
 
+                var data = await response.json();
                 if (typeof data.error === "number") {
                     try {
                         switch (data.error) {
@@ -232,7 +263,6 @@ const Home: NextPage = () => {
         },
     });
 
-    const maxSize = 15; // 15mb
     const dropzoneRef = createRef<HTMLInputElement>();
     const onDrop = useCallback(
         (acceptedFiles: File[], fileRejections: FileRejection[]) => {
@@ -292,12 +322,19 @@ const Home: NextPage = () => {
                     <Flex>
                         <Input
                             mr={2}
-                            placeholder="URL"
+                            placeholder="Enter an image link here!"
                             onChange={formik.handleChange}
                             value={formik.values.url}
                             name="url"
                         />
-                        <Button variant="primary" type="submit">
+                        <Button
+                            variant="primary"
+                            type="submit"
+                            disabled={
+                                formik.values.url.length === 0 ||
+                                formik.values.url.length > 1000
+                            }
+                        >
                             Upload
                         </Button>
                     </Flex>
