@@ -37,17 +37,19 @@ const httpTrigger: AzureFunction = async function (
         return;
     }
 
+    // BUG: this will break if the url is smthn like https://example.com/image.image.png
+    // could fix with fat ass if statement with every popular image extension but 2 much work
     const fileNameMaybeExtension = url.split("/").pop();
     var extension = fileNameMaybeExtension?.split(".").pop();
     const hasExtension = extension != fileNameMaybeExtension;
     var fileName = "";
-    if (hasExtension) {
+    if (hasExtension && extension != undefined) {
         // the file is guaranteed to have an extension here since the extension variable exists
         fileName = fileNameMaybeExtension as string;
+        fileName = fileName.slice(0, -extension.length - 1);
     } else {
         fileName = fileNameMaybeExtension + ".png";
     }
-    console.log(fileName);
 
     // download image and upload to b2
     const b2 = new B2({
@@ -138,10 +140,7 @@ const httpTrigger: AzureFunction = async function (
         }
     }
 
-    console.log(extension);
-
     // upload
-
     const data: UrlData = uploadUrlResponse.data;
 
     // upload file
@@ -161,16 +160,18 @@ const httpTrigger: AzureFunction = async function (
         };
         return;
     }
-    console.log(uploadResponse);
 
     // FUTURE KYLE
-    // add env vars
+    // file not uploaded? was working earlier
 
-    // const retUrl = `https://${process.env.NEXT_PUBLIC_B2_BUCKET}.${process.env.NEXT_PUBLIC_B2_ENDPOINT}/${fileName}`;
+    console.log(uploadResponse);
+    console.log("fileName:", fileName);
+    console.log("newFileName:", newFileName);
+    console.log("extension:", extension);
 
-    // context.res = {
-    //     body: retUrl,
-    // };
+    context.res = {
+        body: `https://${process.env.NEXT_PUBLIC_B2_BUCKET}.${process.env.NEXT_PUBLIC_B2_ENDPOINT}/${newFileName}.${extension}`,
+    };
 };
 
 export default httpTrigger;
