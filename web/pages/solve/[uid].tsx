@@ -20,7 +20,13 @@ import { GetStaticProps, InferGetStaticPropsType } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
-import { BsArrowLeft, BsShareFill, BsTwitter, BsXLg } from "react-icons/bs";
+import {
+    BsArrowLeft,
+    BsPlusLg,
+    BsShareFill,
+    BsTwitter,
+    BsXLg,
+} from "react-icons/bs";
 import { MdOutlineContentCopy } from "react-icons/md";
 import { Box as CustomBox } from "../../Classes/Box";
 import { Point } from "../../Classes/Point";
@@ -54,7 +60,11 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
 }) => {
     const router = useRouter();
 
-    const { isOpen, onOpen, onClose } = useDisclosure();
+    const {
+        isOpen: shareIsOpen,
+        onOpen: shareOnOpen,
+        onClose: shareOnClose,
+    } = useDisclosure();
     const [words, setWords] = useState<string[]>([]);
     const [found, setFound] = useState<Set<string>>(new Set<string>()); // solveWordSearch(): cleaned input words
     const [wordError, setWordError] = useState<string | null>(null);
@@ -69,7 +79,7 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
     const insertWord = (word: string) => {
         if (words.length >= 100) {
             setWordError("Max of 100 words!");
-            return;
+            return false;
         }
 
         // word is empty or only consists of spaces return false
@@ -114,7 +124,6 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
 
     useEffect(() => {
         if (!data) return;
-        console.log(data);
 
         // need to recreate the grid from the data bc grid contains just raw data and doesn't have the special helper classes
         const newGrid = data.grid.map((row) => {
@@ -199,11 +208,7 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
             gridImageCtx.drawImage(cropAndResize, 0, 0);
             wsCanvasCtx.drawImage(cropAndResize, 0, 0);
 
-            // FUTURE KYLE
-            // drawBoxes requires rerender of canvas to update what's on it
-            // create dynamic seo tags based on data inside of getStaticProps?
-
-            drawBoxes(ws, grid);
+            drawBoxes(wsCanvas.current, newGrid);
         };
     }, [data]);
 
@@ -254,6 +259,7 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
                 <meta property="twitter:description" content={description} />
                 <meta property="twitter:image" content={data.url} />
             </Head>
+            {/* contains the cropped, clean image for use in rerendering the wordsearch */}
             <canvas
                 ref={gridImageCanvas}
                 width={896}
@@ -273,12 +279,12 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
                 </Button>
                 <Button
                     leftIcon={<BsShareFill title="Share this solve" />}
-                    onClick={onOpen}
-                    variant="primary"
+                    onClick={shareOnOpen}
+                    bgColor="orange.600"
                 >
                     Share
                 </Button>
-                <Modal isOpen={isOpen} onClose={onClose}>
+                <Modal isOpen={shareIsOpen} onClose={shareOnClose}>
                     <ModalOverlay />
                     <ModalContent>
                         <ModalHeader>Share</ModalHeader>
@@ -333,6 +339,8 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
                         style={{
                             backgroundColor: "grey",
                             borderRadius: 6,
+                            maxWidth: "85vw",
+                            maxHeight: "80vh",
                         }}
                         ref={wsCanvas}
                         width={896}
@@ -367,8 +375,8 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
                             />
                             {/* delete word */}
                             <IconButton
-                                icon={<BsXLg />}
-                                aria-label="Delete word"
+                                icon={<BsXLg title="Delete this word" />}
+                                aria-label={"Delete word: " + w}
                                 onClick={() => {
                                     resolveWordsearch(
                                         words.filter((_, j) => i !== j)
@@ -377,7 +385,7 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
                             />
                         </Flex>
                     ))}
-                    <br />
+                    {words.length > 0 && <br />}
                     <Flex>
                         <Flex direction="column" mr={2}>
                             {/* add some glow to this later to make it more obvious */}
@@ -406,7 +414,9 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
                                 </Text>
                             )}
                         </Flex>
-                        <Button
+                        <IconButton
+                            icon={<BsPlusLg title="Add word" />}
+                            aria-label="Add word"
                             variant="primary"
                             onClick={(e) => {
                                 if (!wordInputRef.current) return;
@@ -416,9 +426,7 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
                                     value = "";
                                 }
                             }}
-                        >
-                            Add
-                        </Button>
+                        />
                     </Flex>
                 </Flex>
             </Flex>

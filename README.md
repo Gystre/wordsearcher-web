@@ -6,10 +6,6 @@ production website for wordsearcher
 
 ## high priority
 
--   better ux for wordsearcher page
-    -   mobile view for [uid].tsx
-    -   resize word search like an image (convert box coordinates to make sure everything stays where it is)
-
 ## mid priority
 
 -   secure functions by only allowing the react app to use them, no one else
