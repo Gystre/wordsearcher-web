@@ -6,6 +6,8 @@ production website for wordsearcher
 
 ## high priority
 
+-   enter an edit mode and edit box labels
+
 ## mid priority
 
 -   secure functions by only allowing the react app to use them, no one else

@@ -1,6 +1,7 @@
 import {
     Box,
     Button,
+    Checkbox,
     Flex,
     IconButton,
     Input,
@@ -69,6 +70,7 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
     const [found, setFound] = useState<Set<string>>(new Set<string>()); // solveWordSearch(): cleaned input words
     const [wordError, setWordError] = useState<string | null>(null);
     const [grid, setGrid] = useState<CustomBox[][]>([]);
+    const [drawLetters, setDrawLetters] = useState(false);
 
     const toast = useToast();
     const wordInputRef = useRef<HTMLInputElement>(null);
@@ -117,6 +119,9 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
             grid,
             newWords ? newWords : words
         );
+        if (drawLetters) {
+            drawBoxes(wsCanvas.current, grid);
+        }
         setFound(found);
 
         if (newWords) setWords(newWords);
@@ -430,11 +435,34 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
                     </Flex>
                 </Flex>
             </Flex>
-            {/* <Text mt={2}>
-                <b>
+
+            <Text mt={2}>
+                <Checkbox
+                    size="lg"
+                    colorScheme="orange"
+                    isChecked={drawLetters}
+                    onChange={(e) => {
+                        if (!wsCanvas.current || !gridImageCanvas.current)
+                            return;
+                        if (e.target.checked) {
+                            drawBoxes(wsCanvas.current, grid);
+                        } else {
+                            solveWordSearch(
+                                wsCanvas.current,
+                                gridImageCanvas.current,
+                                grid,
+                                words
+                            );
+                        }
+                        setDrawLetters(e.target.checked);
+                    }}
+                >
+                    Draw letters
+                </Checkbox>
+                {/* <b>
                     Not working? Try tapping on a letter to change its contents!
-                </b>
-            </Text> */}
+                </b> */}
+            </Text>
         </Layout>
     );
 };
