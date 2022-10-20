@@ -54,6 +54,7 @@ export const Navbar: React.FC<Props> = () => {
                     <a
                         href="https://github.com/gystre/wordsearcher"
                         target="_blank"
+                        rel="noreferrer"
                     >
                         <IconButton
                             icon={<BsFillQuestionCircleFill title="About" />}

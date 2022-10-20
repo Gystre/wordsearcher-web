@@ -35,6 +35,7 @@ export const ExampleBox: React.FC<ExampleBoxProps> = ({ href, imageUrl }) => {
                             borderRadius: "3px",
                         }}
                         draggable={false}
+                        alt="Example wordsearch solve"
                     />
                     <Button
                         variant="primary"

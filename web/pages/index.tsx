@@ -317,7 +317,7 @@ const Home: NextPage = () => {
             formik.setFieldValue("file", acceptedFiles[0]);
             formik.submitForm();
         },
-        []
+        [formik]
     );
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,

@@ -57,13 +57,18 @@ export const Footer: React.FC<FooterProps> = ({}) => {
                 </>
             ) : null}
 
-            <a href="https://github.com/gystre" target="_blank">
+            <a
+                href="https://github.com/gystre"
+                target="_blank"
+                rel="noreferrer"
+            >
                 <GithubIcon size={25} color={iconColor} />
             </a>
             <Box ml={2} />
             <a
                 href="https://www.linkedin.com/in/kyle-yu-3139a5140/"
                 target="_blank"
+                rel="noreferrer"
             >
                 <LinkedinIcon size={25} color={iconColor} />
             </a>

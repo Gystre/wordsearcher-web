@@ -235,7 +235,7 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
     if (!data) {
         return (
             <Layout>
-                <Text>There's nothing for this id wot</Text>
+                <Text>There&apos;s nothing for this id wot</Text>
             </Layout>
         );
     }
