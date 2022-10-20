@@ -20,6 +20,7 @@ import { useRouter } from "next/router";
 import { createRef, useCallback, useState } from "react";
 import { FileRejection, useDropzone } from "react-dropzone";
 import { BsFillImageFill } from "react-icons/bs";
+import ReactTyped from "react-typed";
 import { ExampleBox } from "../components/ExampleBox";
 import { Layout } from "../components/Layout";
 import theme from "../theme";
@@ -31,6 +32,39 @@ import { validateUrl } from "../utils/validateUrl";
 // max size of uploaded image in mb
 const maxSize = 15;
 
+const firstText = ["Solve any wordsearch with just a picture!"];
+const otherText = [
+    "Upload a picture of a wordsearch and get the solution!",
+    "Get the solution by uploading a picture!",
+    "With just a picture you can solve any wordsearch!",
+    "Picture wordsearch",
+    "Solve wordsearches or smthn",
+    "lol idk",
+    "⭐ たんたかたん～ ⭐",
+    "急いで、これを使いなさい！",
+    "AAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHHHHHHHH",
+    "NOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+    "Uh yeah!",
+    "( ´･･)ﾉ(._.`)",
+    "ballin",
+    "Kyle cool?",
+    "Kyle cool everyday.",
+    "Better than Paulo!",
+    "Way better than squishy!",
+    "yessir",
+    "No, that wasn't quite right...",
+    "Why are you still sitting there reading these?!",
+    "Upload a file already!",
+    "ヾ(≧へ≦)〃",
+    "Stop reading and use the tool already!!!!",
+    "",
+    "What do you think you're doing...",
+    "B-baka! (*/ω＼)",
+    "Hmph! (︶︹︺)",
+    "(＾• ω •＾)",
+    "I'M DROWNING AAGHATPHTHGHTATHGPAHTGPHATG ‿︵‿︵‿︵‿ヽ(°□° )ノ︵‿︵‿︵‿︵",
+];
+
 const Home: NextPage = () => {
     const [isMobile] = useMediaQuery("(max-width: 768px)");
     const { colorMode } = useColorMode();
@@ -40,6 +74,7 @@ const Home: NextPage = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
     const [status, setStatus] = useState("");
+    const [currentText, setCurrentText] = useState(firstText);
 
     const errorToast = (err: string) => {
         toast({
@@ -387,7 +422,20 @@ const Home: NextPage = () => {
                 <meta property="twitter:image" content={imageUrl} />
             </Head>
             <ColorModeScript initialColorMode={theme.config.initialColorMode} />
-            <Heading mb={2}>Solve any wordsearch with just a picture!</Heading>
+
+            <Heading mb={2}>
+                <ReactTyped
+                    strings={currentText}
+                    onLastStringBackspaced={() => {
+                        setCurrentText(otherText);
+                    }}
+                    backDelay={currentText === firstText ? 8000 : 2000}
+                    typeSpeed={30}
+                    backSpeed={60}
+                    loop
+                    shuffle
+                />
+            </Heading>
             <form onSubmit={formik.handleSubmit}>
                 <div {...getRootProps()}>
                     <Flex
@@ -419,9 +467,9 @@ const Home: NextPage = () => {
                 Or try one of these...
             </Heading>
             <Flex direction={isMobile ? "column" : "row"}>
-                <ExampleBox imageUrl="/ex1.jpg" />
-                <ExampleBox imageUrl="/ex1.jpg" />
-                <ExampleBox imageUrl="/ex1.jpg" />
+                <ExampleBox href="/solve/ndczs2gv" imageUrl="/ex1.jpg" />
+                <ExampleBox href="/solve/3qyg2qth" imageUrl="/ex2.jpg" />
+                <ExampleBox href="/solve/artxgozs" imageUrl="/ex3.jpg" />
             </Flex>
         </Layout>
     );

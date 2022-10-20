@@ -17,7 +17,12 @@ export const Layout: React.FC<Props> = ({ children }) => {
     return (
         <Grid templateRows="auto 1fr auto" height="100vh">
             <Navbar />
-            <Box mt={8} mx="auto" maxW={isMobile ? "400px" : ""} w="100%">
+            <Box
+                mt={isMobile ? 0 : 8}
+                mx="auto"
+                maxW={isMobile ? "400px" : ""}
+                w="100%"
+            >
                 <Flex direction="column" align="center" textAlign="center">
                     {children}
                 </Flex>

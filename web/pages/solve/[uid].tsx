@@ -4,6 +4,7 @@ import {
     Checkbox,
     Flex,
     IconButton,
+    Image as ChakraImage,
     Input,
     Modal,
     ModalBody,
@@ -19,6 +20,7 @@ import {
 } from "@chakra-ui/react";
 import { GetStaticProps, InferGetStaticPropsType } from "next";
 import Head from "next/head";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -71,6 +73,7 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
     const [wordError, setWordError] = useState<string | null>(null);
     const [grid, setGrid] = useState<CustomBox[][]>([]);
     const [drawLetters, setDrawLetters] = useState(false);
+    const [showOgImg, setShowOgImg] = useState(false);
 
     const toast = useToast();
     const wordInputRef = useRef<HTMLInputElement>(null);
@@ -129,6 +132,7 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
 
     useEffect(() => {
         if (!data) return;
+        console.log(data);
 
         // need to recreate the grid from the data bc grid contains just raw data and doesn't have the special helper classes
         const newGrid = data.grid.map((row) => {
@@ -221,6 +225,9 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
         return (
             <Layout>
                 <div>Loading...</div>
+                <div>
+                    (Have to wake up the server, so it might take a few seconds)
+                </div>
                 <Spinner mt={2} size="xl" />
             </Layout>
         );
@@ -274,14 +281,15 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
                 }}
             />
             <Flex mb={2}>
-                <Button
-                    mr={2}
-                    leftIcon={<BsArrowLeft title="ooga booga" />}
-                    onClick={() => router.push("/")}
-                    variant="primary"
-                >
-                    Go back
-                </Button>
+                <Link href="/" passHref>
+                    <Button
+                        mr={2}
+                        leftIcon={<BsArrowLeft title="ooga booga" />}
+                        variant="primary"
+                    >
+                        Go back
+                    </Button>
+                </Link>
                 <Button
                     leftIcon={<BsShareFill title="Share this solve" />}
                     onClick={shareOnOpen}
@@ -346,10 +354,17 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
                             borderRadius: 6,
                             maxWidth: "85vw",
                             maxHeight: "80vh",
+                            display: showOgImg ? "none" : "block",
                         }}
                         ref={wsCanvas}
                         width={896}
                         height={896}
+                    />
+                    <ChakraImage
+                        src={data.url}
+                        maxWidth="85vw"
+                        maxHeight="80vh"
+                        display={showOgImg ? "block" : "none"}
                     />
                 </Box>
 
@@ -440,10 +455,23 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
                 <Checkbox
                     size="lg"
                     colorScheme="orange"
+                    isChecked={showOgImg}
+                    mr={2}
+                    onChange={(e) => {
+                        setShowOgImg(e.currentTarget.checked);
+                    }}
+                >
+                    Show original image
+                </Checkbox>
+
+                <Checkbox
+                    size="lg"
+                    colorScheme="orange"
                     isChecked={drawLetters}
                     onChange={(e) => {
                         if (!wsCanvas.current || !gridImageCanvas.current)
                             return;
+
                         if (e.target.checked) {
                             drawBoxes(wsCanvas.current, grid);
                         } else {

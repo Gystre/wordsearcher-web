@@ -6,7 +6,7 @@ import {
     useColorMode,
 } from "@chakra-ui/react";
 import Image from "next/image";
-import Link from "next/link";
+import NextLink from "next/link";
 import {
     BsFillQuestionCircleFill,
     BsMoonStarsFill,
@@ -26,25 +26,28 @@ export const Navbar: React.FC<Props> = () => {
                 align="center"
                 justifyContent="space-between"
             >
-                <Link href="/">
-                    <Flex align="center" cursor="pointer">
-                        <Image
-                            src="/logo.png"
-                            alt="logo"
-                            width={50}
-                            height={50}
-                        />
-                        <Heading
-                            as="h1"
-                            ml={2}
-                            mr={4}
-                            size="lg"
-                            userSelect="none"
-                        >
-                            Wordsearcher
-                        </Heading>
-                    </Flex>
-                </Link>
+                <NextLink href="/" passHref>
+                    <a>
+                        <Flex align="center" cursor="pointer">
+                            <Image
+                                src="/logo.png"
+                                alt="logo"
+                                width={50}
+                                height={50}
+                            />
+                            <Heading
+                                as="h1"
+                                ml={2}
+                                mr={4}
+                                size="lg"
+                                userSelect="none"
+                                textDecoration="none"
+                            >
+                                Wordsearcher
+                            </Heading>
+                        </Flex>
+                    </a>
+                </NextLink>
 
                 {/* attach button click to google analytics later? */}
                 <Flex align="center">
