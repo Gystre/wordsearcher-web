@@ -47,7 +47,15 @@ export const Footer: React.FC<FooterProps> = ({}) => {
                 </>
             ) : null}
 
-            <Text fontSize={isMobile ? "sm" : "md"}>© 2022 Kyle Yu Inc.</Text>
+            <a
+                href="https://gystre.github.io/"
+                target="_blank"
+                rel="noreferrer"
+            >
+                <Text fontSize={isMobile ? "sm" : "md"}>
+                    © 2022 Kyle Yu Inc.
+                </Text>
+            </a>
 
             <Box ml={2} />
             {!isMobile ? (

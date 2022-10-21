@@ -37,7 +37,7 @@ const otherText = [
     "Upload a picture of a wordsearch and get the solution!",
     "Get the solution by uploading a picture!",
     "With just a picture you can solve any wordsearch!",
-    "Picture wordsearch",
+    "Picture for da wordsearch",
     "Solve wordsearches or smthn",
     "lol idk",
     "⭐ たんたかたん～ ⭐",
@@ -341,7 +341,7 @@ const Home: NextPage = () => {
                             mr={2}
                         />
                         <div>
-                            Drag an image{" "}
+                            Drag an image or{" "}
                             <Box
                                 display="inline"
                                 textDecoration="underline"
@@ -427,9 +427,11 @@ const Home: NextPage = () => {
                 <ReactTyped
                     strings={currentText}
                     onLastStringBackspaced={() => {
-                        setCurrentText(otherText);
+                        if (currentText === firstText)
+                            setCurrentText(otherText);
                     }}
                     backDelay={currentText === firstText ? 8000 : 2000}
+                    startDelay={1000} // only affects first time, other strings in the array will start immediately
                     typeSpeed={30}
                     backSpeed={60}
                     loop

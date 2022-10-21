@@ -132,7 +132,6 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
 
     useEffect(() => {
         if (!data) return;
-        console.log(data);
 
         // need to recreate the grid from the data bc grid contains just raw data and doesn't have the special helper classes
         const newGrid = data.grid.map((row) => {
@@ -297,7 +296,7 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
                 >
                     Share
                 </Button>
-                <Modal isOpen={shareIsOpen} onClose={shareOnClose}>
+                <Modal size="lg" isOpen={shareIsOpen} onClose={shareOnClose}>
                     <ModalOverlay />
                     <ModalContent>
                         <ModalHeader>Share</ModalHeader>
