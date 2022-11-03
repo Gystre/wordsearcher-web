@@ -1,4 +1,4 @@
-import { Box, Button, Link, useMediaQuery } from "@chakra-ui/react";
+import { Box, Button, Link } from "@chakra-ui/react";
 import Image from "next/image";
 import NextLink from "next/link";
 import React from "react";
@@ -9,16 +9,13 @@ interface ExampleBoxProps {
 }
 
 export const ExampleBox: React.FC<ExampleBoxProps> = ({ href, imageUrl }) => {
-    const [isMobile] = useMediaQuery("(max-width: 768px)");
-
-    const size = isMobile ? 275 : 150;
+    const size = 150;
 
     return (
         <NextLink href={href} passHref>
             <Link>
                 <Box
-                    mr={isMobile ? 0 : 2}
-                    mb={isMobile ? 2 : 0}
+                    mr={2}
                     position="relative"
                     width={size}
                     height={size}
@@ -33,6 +30,7 @@ export const ExampleBox: React.FC<ExampleBoxProps> = ({ href, imageUrl }) => {
                         style={{
                             filter: "brightness(75%)",
                             borderRadius: "3px",
+                            userSelect: "none",
                         }}
                         draggable={false}
                         alt="Example wordsearch solve"

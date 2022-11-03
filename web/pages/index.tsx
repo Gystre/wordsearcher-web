@@ -13,7 +13,6 @@ import {
     useToast,
 } from "@chakra-ui/react";
 import { useFormik } from "formik";
-import { motion } from "framer-motion";
 import type { NextPage } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
@@ -23,9 +22,9 @@ import { BsFillImageFill } from "react-icons/bs";
 import ReactTyped from "react-typed";
 import { ExampleBox } from "../components/ExampleBox";
 import { Layout } from "../components/Layout";
-import theme from "../theme";
 import { errorAnim } from "../utils/errorAnim";
 import { ErrorCode } from "../utils/ErrorCode";
+import theme from "../utils/theme";
 import { uploadToB2 } from "../utils/uploadToB2";
 import { validateUrl } from "../utils/validateUrl";
 
@@ -63,6 +62,12 @@ const otherText = [
     "Hmph! (︶︹︺)",
     "(＾• ω •＾)",
     "I'M DROWNING AAGHATPHTHGHTATHGPAHTGPHATG ‿︵‿︵‿︵‿ヽ(°□° )ノ︵‿︵‿︵‿︵",
+    "Keep your back straight! (￣ー￣)",
+    "Stay hydrated! 💧🍼",
+    "Don't forget to eat! 🍔🍟",
+    "Stay alive! 🧠",
+    "Don't die! 💀",
+    "ඞ🔪ඞ",
 ];
 
 const Home: NextPage = () => {
@@ -423,6 +428,16 @@ const Home: NextPage = () => {
             </Head>
             <ColorModeScript initialColorMode={theme.config.initialColorMode} />
 
+            {/* 
+            FUTURE KYLE
+            still won't load on my phone
+            try to find an in html console to debug on phone
+            eruda is one but doesn't work with react
+            might have to make issue on chakra github
+
+            also maybe bring back the column layout for the example boxes, need to see how it'll look like on my phone first
+            */}
+
             <Heading mb={2}>
                 <ReactTyped
                     strings={currentText}
@@ -431,7 +446,7 @@ const Home: NextPage = () => {
                             setCurrentText(otherText);
                     }}
                     backDelay={currentText === firstText ? 8000 : 2000}
-                    startDelay={1000} // only affects first time, other strings in the array will start immediately
+                    startDelay={1000} // bug: only affects first time, other strings in the array will start immediately
                     typeSpeed={30}
                     backSpeed={60}
                     loop
@@ -455,7 +470,7 @@ const Home: NextPage = () => {
                         align="center"
                         justifyContent="space-evenly"
                         basis="100%"
-                        as={motion.div}
+                        // as={motion.div}
                         animation={error ? errorAnim : ""}
                     >
                         <input {...getInputProps()} ref={dropzoneRef} />
@@ -468,7 +483,7 @@ const Home: NextPage = () => {
             <Heading size="lg" mt={2} mb={4}>
                 Or try one of these...
             </Heading>
-            <Flex direction={isMobile ? "column" : "row"}>
+            <Flex>
                 <ExampleBox href="/solve/ndczs2gv" imageUrl="/ex1.jpg" />
                 <ExampleBox href="/solve/3qyg2qth" imageUrl="/ex2.jpg" />
                 <ExampleBox href="/solve/artxgozs" imageUrl="/ex3.jpg" />
