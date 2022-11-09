@@ -392,8 +392,7 @@ const Home: NextPage = () => {
 
     const description =
         "Have a word search you don't feel like solving? Solve it in Wordsearcher with just a picture! (^・ω・^ )";
-    const imageUrl =
-        "https://f004.backblazeb2.com/file/wordsearcher/wordsearcher_preview_image.png";
+    const imageUrl = "https://gystre.github.io/assets/wordsearcher_seo.png";
 
     return (
         <Layout>
