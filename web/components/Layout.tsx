@@ -23,10 +23,12 @@ export const Layout: React.FC<Props> = ({ children }) => {
                 maxW={isMobile ? "400px" : ""}
                 w="100%"
             >
-                <Flex direction="column" align="center" textAlign="center">
-                    {/* could have effect on seo? */}
-                    <main>{children}</main>
-                </Flex>
+                {/* could have effect on seo? */}
+                <main>
+                    <Flex direction="column" align="center" textAlign="center">
+                        {children}
+                    </Flex>
+                </main>
             </Box>
             <Footer />
         </Grid>
