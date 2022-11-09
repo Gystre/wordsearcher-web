@@ -7,6 +7,7 @@ production website for wordsearcher
 ## high priority
 
 -   chakra v2 doesn't work on my phone
+-   include the currently typed word to be solved
 -   enter an edit mode and edit box labels
 
 ## mid priority

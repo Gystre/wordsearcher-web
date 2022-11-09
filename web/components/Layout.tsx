@@ -24,7 +24,8 @@ export const Layout: React.FC<Props> = ({ children }) => {
                 w="100%"
             >
                 <Flex direction="column" align="center" textAlign="center">
-                    {children}
+                    {/* could have effect on seo? */}
+                    <main>{children}</main>
                 </Flex>
             </Box>
             <Footer />

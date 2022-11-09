@@ -393,7 +393,7 @@ const Home: NextPage = () => {
     const description =
         "Have a word search you don't feel like solving? Solve it in Wordsearcher with just a picture! (^・ω・^ )";
     const imageUrl =
-        "https://cdn.discordapp.com/attachments/200994742782132224/1029618061029941258/wordsearcher_preview_image.png";
+        "https://f004.backblazeb2.com/file/wordsearcher/wordsearcher_preview_image.png";
 
     return (
         <Layout>
