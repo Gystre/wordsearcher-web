@@ -135,13 +135,13 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
 
         // need to recreate the grid from the data bc grid contains just raw data and doesn't have the special helper classes
         const newGrid = data.grid.map((row) => {
-            return row.map((box) => {
+            return row.map((box: CustomBox | null) => {
                 return new CustomBox(
-                    box.klass,
-                    box.topLeft,
-                    box.bottomRight,
-                    box.id,
-                    box.score
+                    box?.klass ? box.klass : "",
+                    box?.topLeft ? box.topLeft : new Point(0, 0),
+                    box?.bottomRight ? box.bottomRight : new Point(0, 0),
+                    box?.id,
+                    box?.score
                 );
             });
         });
