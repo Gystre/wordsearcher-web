@@ -1,21 +1,24 @@
-import { io, Rank, Tensor, Tensor3D } from "@tensorflow/tfjs-core";
+import { IOHandler } from "@tensorflow/tfjs-core/dist/io/types";
 import {
+  GraphModel,
+  Rank,
+  Tensor,
+  Tensor3D,
   browser,
   dispose,
-  GraphModel,
   loadGraphModel,
   ones,
   image as tfImage,
   tidy,
 } from "@tensorflow/tfjs-node";
-import { createCanvas, ImageData, loadImage } from "canvas";
+import { ImageData, createCanvas, loadImage } from "canvas";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createGridArray } from "./createGridArray";
 import { ErrorCode } from "./shared/ErrorCode";
 
 var loading = true;
-var identifierModel: GraphModel<string | io.IOHandler> | null = null;
-var gridModel: GraphModel<string | io.IOHandler> | null = null;
+var identifierModel: GraphModel<string | IOHandler> | null = null;
+var gridModel: GraphModel<string | IOHandler> | null = null;
 
 const identifierPromise = loadGraphModel(
   `https://xaist2.github.io/wordsearcher-identifier_7-5-2022/model.json`,
