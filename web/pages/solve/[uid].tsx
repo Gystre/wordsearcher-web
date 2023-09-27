@@ -492,7 +492,7 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
 // ig this is run while building the page, don't know why have to pass in random thing for params tho
 export async function getStaticPaths() {
   return {
-    paths: [{ params: { uid: "asdf" } }],
+    paths: [{ params: { uid: "iapvQVYNJteS8OCaGl0a" } }],
     fallback: true,
   };
 }
