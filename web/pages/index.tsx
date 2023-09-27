@@ -166,10 +166,14 @@ const Home: NextPage = () => {
         console.log("url:", url);
         setStatus("Identifying wordsearch...");
 
-        var response = await fetch(`/api/identifySearch`, {
-          method: "POST",
-          body: JSON.stringify({ url }),
-        });
+        // for the vercel version of identifySearch
+        // var response = await fetch(`/api/identifySearch`, {
+        //   method: "POST",
+        //   body: JSON.stringify({ url }),
+        // });
+        var response = await fetch(
+          `https://wordsearcher.azurewebsites.net/api/identifysearch?url=${url}`
+        );
         if (!response.ok) {
           errorToast(
             "Failed to connect to server. It might be down right now :("
@@ -192,10 +196,13 @@ const Home: NextPage = () => {
                 for (let i = 1; i <= 3; i++) {
                   setStatus("Models aren't loaded, attempt: " + i + "...");
                   await new Promise((r) => setTimeout(r, 3000));
-                  await fetch(`/api/identifySearch`, {
-                    method: "POST",
-                    body: JSON.stringify({ url }),
-                  })
+                  // await fetch(`/api/identifySearch`, {
+                  //   method: "POST",
+                  //   body: JSON.stringify({ url }),
+                  // })
+                  await fetch(
+                    `https://wordsearcher.azurewebsites.net/api/identifysearch?url=${url}`
+                  )
                     .then((response) => {
                       if (response.ok) {
                         return response.json();
