@@ -13,6 +13,8 @@ export default async function handler(
 ) {
   const uid = req.query.uid as string;
 
+  console.log("fetchign et solve", uid);
+
   try {
     validateQuery.validateSync(req.query);
   } catch (e) {

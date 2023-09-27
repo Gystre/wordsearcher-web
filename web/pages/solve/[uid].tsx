@@ -42,14 +42,18 @@ import { solveWordSearch } from "../../utils/solveWordSearch";
 type Data = {
   uid: number;
   url: string;
-  croppedInput: {
-    x1: number;
-    y1: number;
-    x2: number;
-    y2: number;
-  };
-  grid: CustomBox[][];
-  createdOn: number;
+  //   croppedInput: {
+  //     x1: number;
+  //     y1: number;
+  //     x2: number;
+  //     y2: number;
+  //   };
+  //   grid: CustomBox[][];
+
+  // stringified with JSON.stringify bc firebase only accepts primitive data types and not complex objects
+  croppedInput: string;
+  grid: string;
+  createdAt: number;
 
   error?: any; // yup validation error
 };
@@ -132,9 +136,16 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
 
   useEffect(() => {
     if (!data) return;
+    const grid: CustomBox[][] = JSON.parse(data.grid);
+    const croppedInput: {
+      x1: number;
+      y1: number;
+      x2: number;
+      y2: number;
+    } = JSON.parse(data.croppedInput);
 
     // need to recreate the grid from the data bc grid contains just raw data and doesn't have the special helper classes
-    const newGrid = data.grid.map((row) => {
+    const newGrid = grid.map((row) => {
       return row.map((box: CustomBox | null) => {
         return new CustomBox(
           box?.klass ? box.klass : "",
@@ -184,8 +195,8 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
 
       const box = new CustomBox(
         "",
-        new Point(data.croppedInput.x1, data.croppedInput.y1),
-        new Point(data.croppedInput.x2, data.croppedInput.y2)
+        new Point(croppedInput.x1, croppedInput.y1),
+        new Point(croppedInput.x2, croppedInput.y2)
       );
       box.convertFromYolo(identiferRes, identiferRes);
 
@@ -490,7 +501,9 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   var data: Data | null = null;
 
   if (params?.uid) {
-    const response = await fetch(`/api/getSolve?uid=${params.uid}`);
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_URL}/api/getSolve?uid=${params.uid}`
+    );
     data = await response.json();
 
     if (data?.error) {
