@@ -63,12 +63,14 @@ export default async function handler(
 ) {
   // only allow post requests
   if (req.method !== "POST") return response.status(405);
+  if (!req.body) return response.status(400).json({ error: "Missing body" });
+  const body = JSON.parse(req.body);
 
-  const url = req.body.url as string;
+  const url = body.url;
 
   // check if models are loaded before downloading anything
   if (loading) {
-    response.status(500).json({ error: ErrorCode.modelNotLoaded });
+    response.status(202).json({ error: ErrorCode.modelNotLoaded });
     return;
   }
 

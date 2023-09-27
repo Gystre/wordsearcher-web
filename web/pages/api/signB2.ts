@@ -45,15 +45,11 @@ export default async function handler(
     applicationKey: process.env.NEXT_PUBLIC_B2_APPLICATION_KEY as string,
   });
 
-  console.log(b2);
-
   await b2.authorize();
 
   const url = await b2.getUploadUrl({
     bucketId: process.env.NEXT_PUBLIC_B2_BUCKET_ID as string,
   });
-
-  console.log("url", url);
 
   if (url.status != "200") {
     res.status(500).json({
@@ -63,8 +59,6 @@ export default async function handler(
   }
 
   const data: UrlData = url.data;
-
-  console.log("data", data);
 
   res.status(200).json({
     uploadUrl: data.uploadUrl,

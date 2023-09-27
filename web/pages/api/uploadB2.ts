@@ -15,12 +15,14 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const url: string = req.body && req.body.url;
+  if (!req.body) return res.status(400).json({ error: "Missing body" });
+  const body = JSON.parse(req.body);
+  const url: string = body.url;
 
   if (
-    !process.env.B2_KEY_ID ||
-    !process.env.B2_APPLICATION_KEY ||
-    !process.env.B2_BUCKET_ID
+    !process.env.NEXT_PUBLIC_B2_KEY_ID ||
+    !process.env.NEXT_PUBLIC_B2_APPLICATION_KEY ||
+    !process.env.NEXT_PUBLIC_B2_BUCKET_ID
   ) {
     res.status(500).json({ error: "Missing B2 credentials" });
     return;
@@ -133,13 +135,13 @@ export default async function handler(
 
   // get the upload url
   const b2 = new B2({
-    applicationKeyId: process.env.B2_KEY_ID as string,
-    applicationKey: process.env.B2_APPLICATION_KEY as string,
+    applicationKeyId: process.env.NEXT_PUBLIC_B2_KEY_ID as string,
+    applicationKey: process.env.NEXT_PUBLIC_B2_APPLICATION_KEY as string,
   });
   await b2.authorize();
 
   const uploadUrlResponse = await b2.getUploadUrl({
-    bucketId: process.env.B2_BUCKET_ID as string,
+    bucketId: process.env.NEXT_PUBLIC_B2_BUCKET_ID as string,
   });
 
   if (uploadUrlResponse.status != "200") {

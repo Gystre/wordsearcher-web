@@ -166,7 +166,7 @@ const Home: NextPage = () => {
         console.log("url:", url);
         setStatus("Identifying wordsearch...");
 
-        var response = await fetch(`/api/identifysearch`, {
+        var response = await fetch(`/api/identifySearch`, {
           method: "POST",
           body: JSON.stringify({ url }),
         });
@@ -174,6 +174,8 @@ const Home: NextPage = () => {
           errorToast(
             "Failed to connect to server. It might be down right now :("
           );
+          console.log(await response.text());
+
           setCrashed();
           return;
         }
@@ -190,7 +192,7 @@ const Home: NextPage = () => {
                 for (let i = 1; i <= 3; i++) {
                   setStatus("Models aren't loaded, attempt: " + i + "...");
                   await new Promise((r) => setTimeout(r, 3000));
-                  await fetch(`/api/identifysearch`, {
+                  await fetch(`/api/identifySearch`, {
                     method: "POST",
                     body: JSON.stringify({ url }),
                   })
@@ -207,11 +209,12 @@ const Home: NextPage = () => {
                       }
                     })
                     .catch((e) => {});
+
                   if (got) break;
                 }
                 if (!got)
                   throw new Error(
-                    "Model not loaded, the azure function is probably asleep. Please try again in ~5 seconds."
+                    "The models aren't loaded. Please try again in ~5 seconds."
                   );
                 break;
               case ErrorCode.wordsearchNotFound:
@@ -234,38 +237,16 @@ const Home: NextPage = () => {
         };
 
         // insert into db and redirect
-        var dbResponse = await fetch(
-          "https://wordsearcher.azurewebsites.net/api/insertSolve",
-          {
-            method: "POST",
-            body: JSON.stringify(finalData),
-          }
-        );
+        var dbResponse = await fetch("/api/insertSolve", {
+          method: "POST",
+          body: JSON.stringify(finalData),
+        });
 
-        // try it again 3 more times cuz gives 500 error sometimes???
         if (!dbResponse.ok) {
-          var got = false;
-          for (let i = 1; i <= 3; i++) {
-            setStatus("Failed to insert into database, attempt: " + i + "...");
-            await new Promise((r) => setTimeout(r, 3000));
-            dbResponse = await fetch(
-              "https://wordsearcher.azurewebsites.net/api/insertSolve",
-              {
-                method: "POST",
-                body: JSON.stringify(finalData),
-              }
-            );
-            if (dbResponse.ok) {
-              got = true;
-              break;
-            }
-          }
+          console.log(await dbResponse.text());
 
-          if (!got) {
-            errorToast("Failed to insert into the database. Please try again.");
-            setCrashed();
-            return;
-          }
+          errorToast("Failed to insert into the database. Please try again.");
+          setCrashed();
         }
 
         var dbData = await dbResponse.json();
@@ -278,7 +259,7 @@ const Home: NextPage = () => {
         }
 
         setStatus("Solved! Going to word search page...");
-        router.push(`/solve/${dbData.uid}`);
+        router.push(`/solve/${dbData.id}`);
       }
     },
   });

@@ -14,7 +14,7 @@ const firebaseConfig = {
 };
 
 export enum Collections {
-  users = "users",
+  solves = "solves",
 }
 
 // init firebase services
