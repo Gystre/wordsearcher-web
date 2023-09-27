@@ -8,57 +8,56 @@ Lower priority rn since crypto-js is only 50kb
 */
 
 export const uploadToB2 = async (file: File) => {
-    // image is coming from mobile phone camera, cut res in half
-    const compFile = await compressImage(file);
-    const savedBytes = file.size - compFile.size;
+  // image is coming from mobile phone camera, cut res in half
+  const compFile = await compressImage(file);
+  const savedBytes = file.size - compFile.size;
 
-    if (savedBytes > 0) {
-        console.log(
-            "compressed image, saved:",
-            (savedBytes / 1000000).toFixed(2),
-            "mb"
-        );
-        file = compFile;
-    }
-
-    const response = await fetch(
-        `https://wordsearcher.azurewebsites.net/api/signB2?fileName=${noExtension(
-            file.name
-        )}&fileType=${file.type}`
+  if (savedBytes > 0) {
+    console.log(
+      "compressed image, saved:",
+      (savedBytes / 1000000).toFixed(2),
+      "mb"
     );
+    file = compFile;
+  }
 
-    const data = await response.json();
-    const { uploadUrl, authorizationToken, fileName } = data;
+  const response = await fetch(
+    `/api/signB2?fileName=${noExtension(file.name)}&fileType=${file.type}`
+  );
 
-    var ret: any = await new Promise(function (resolve, reject) {
-        const reader = new FileReader();
-        reader.onload = function () {
-            const hash = SHA1(enc.Latin1.parse(reader.result as string));
-            const xhr = new XMLHttpRequest();
+  const data = await response.json();
 
-            xhr.addEventListener("load", function () {
-                resolve(xhr.response);
-            });
+  const { uploadUrl, authorizationToken, fileName } = data;
 
-            xhr.open("POST", uploadUrl);
+  var ret: any = await new Promise(function (resolve, reject) {
+    const reader = new FileReader();
+    reader.onload = function () {
+      const hash = SHA1(enc.Latin1.parse(reader.result as string));
+      const xhr = new XMLHttpRequest();
 
-            xhr.setRequestHeader("Content-Type", file.type);
-            xhr.setRequestHeader("Authorization", authorizationToken);
-            xhr.setRequestHeader("X-Bz-File-Name", fileName);
-            xhr.setRequestHeader("X-Bz-Content-Sha1", hash.toString());
+      xhr.addEventListener("load", function () {
+        resolve(xhr.response);
+      });
 
-            xhr.send(file);
-        };
-        reader.onerror = (error) => {
-            reject(error);
-        };
-        reader.readAsBinaryString(file);
-    });
-    ret = JSON.parse(ret);
-    if (ret.status === 400) {
-        throw new Error(ret.message);
-    }
+      xhr.open("POST", uploadUrl);
 
-    // get type from file.type
-    return `https://${process.env.NEXT_PUBLIC_B2_BUCKET}.${process.env.NEXT_PUBLIC_B2_ENDPOINT}/${fileName}`;
+      xhr.setRequestHeader("Content-Type", file.type);
+      xhr.setRequestHeader("Authorization", authorizationToken);
+      xhr.setRequestHeader("X-Bz-File-Name", fileName);
+      xhr.setRequestHeader("X-Bz-Content-Sha1", hash.toString());
+
+      xhr.send(file);
+    };
+    reader.onerror = (error) => {
+      reject(error);
+    };
+    reader.readAsBinaryString(file);
+  });
+  ret = JSON.parse(ret);
+  if (ret.status === 400) {
+    throw new Error(ret.message);
+  }
+
+  // get type from file.type
+  return `https://${process.env.NEXT_PUBLIC_B2_BUCKET}.${process.env.NEXT_PUBLIC_B2_ENDPOINT}/${fileName}`;
 };

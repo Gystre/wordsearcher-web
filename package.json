@@ -1,7 +1,11 @@
 {
-    "private": true,
-    "workspaces": [
-        "web",
-        "azure"
-    ]
+  "dependencies": {
+    "backblaze-b2": "^1.7.0",
+    "canvas": "^2.11.2",
+    "node-fetch": "^3.3.2",
+    "yup": "^1.3.1"
+  },
+  "devDependencies": {
+    "@types/backblaze-b2": "^1.5.3"
+  }
 }
