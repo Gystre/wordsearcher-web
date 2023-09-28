@@ -255,7 +255,7 @@ const Solve: InferGetStaticPropsType<typeof getStaticProps> = ({
   return (
     <Layout>
       <Head>
-        <title>{title + " - " + data.uid}</title>
+        <title>{title + " | Solve"}</title>
         <meta name="title" content={title} />
         <meta name="description" content={description} />
         <meta name="copyright" content="Kyle Yu" />

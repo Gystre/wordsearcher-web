@@ -435,9 +435,9 @@ const Home: NextPage = () => {
         Or try one of these...
       </Heading>
       <Flex>
-        <ExampleBox href="/solve/ndczs2gv" imageUrl="/ex1.jpg" />
-        <ExampleBox href="/solve/3qyg2qth" imageUrl="/ex2.jpg" />
-        <ExampleBox href="/solve/artxgozs" imageUrl="/ex3.jpg" />
+        <ExampleBox href="/solve/mRZNA0W0mKpl6ue1Kpwz" imageUrl="/ex1.jpg" />
+        <ExampleBox href="/solve/nQLVQH1ho3dIvd5kw6r2" imageUrl="/ex2.jpg" />
+        <ExampleBox href="/solve/vTZirm3qjSx8hG5Ggceb" imageUrl="/ex3.jpg" />
       </Flex>
     </Layout>
   );
