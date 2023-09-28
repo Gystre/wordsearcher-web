@@ -9,6 +9,11 @@ ML Inference = Azure Functions (Node.js)
 Database = Firebase
 Image Storage = Backblaze B2
 
+# Notes
+
+- All azure functions are disabled on the portal except for identifySearch bc used to use cosmosdb but now using firebase
+- All other backend api routes are hosted in the `/web/pages/api` folder
+
 # TODO
 
 ## high priority
